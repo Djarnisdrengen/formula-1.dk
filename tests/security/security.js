@@ -694,11 +694,32 @@ async function checkAccountEnumeration() {
 async function checkDnsSecurity() {
     // SPF / DKIM / DMARC / CAA records live on the apex domain, not www
     const apex = hostname.replace(/^www\./, '');
+    // For a test subdomain like formula-1.helvegpovlsen.dk, mail-auth records
+    // (SPF/DMARC/DKIM) live on the registrable parent (helvegpovlsen.dk), not
+    // the site's own apex — only fall back there, never for a 2-label apex.
+    const apexLabels   = apex.split('.');
+    const mailParent   = apexLabels.length > 2 ? apexLabels.slice(-2).join('.') : null;
 
     async function dnsQuery(name, type) {
         const url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`;
         const res = await request(url, { headers: { 'Accept': 'application/dns-json' } });
         return JSON.parse(res.body);
+    }
+
+    // Query `name` for TXT records; if none match `predicate` and `parentName`
+    // is given, retry once against it. Returns { value, domain } or null.
+    async function findTxtWithFallback(name, predicate, parentName) {
+        const data = await dnsQuery(name, 'TXT');
+        const txts = (data.Answer || []).filter(r => r.type === 16).map(r => (r.data || '').replace(/^"|"$/g, ''));
+        const hit = txts.find(predicate);
+        if (hit) return { value: hit, domain: name };
+        if (parentName && name !== parentName) {
+            const parentData = await dnsQuery(parentName, 'TXT');
+            const parentTxts = (parentData.Answer || []).filter(r => r.type === 16).map(r => (r.data || '').replace(/^"|"$/g, ''));
+            const parentHit = parentTxts.find(predicate);
+            if (parentHit) return { value: parentHit, domain: parentName };
+        }
+        return null;
     }
 
     // DNSSEC — AD flag set means Cloudflare validated the full chain of trust
@@ -756,12 +777,11 @@ async function checkDnsSecurity() {
 
     // SPF
     try {
-        const data = await dnsQuery(apex, 'TXT');
-        const txts = (data.Answer || []).filter(r => r.type === 16).map(r => (r.data || '').replace(/^"|"$/g, ''));
-        const spf = txts.find(t => t.startsWith('v=spf1'));
+        const hit = await findTxtWithFallback(apex, t => t.startsWith('v=spf1'), mailParent);
         const spfInclude = hostname.includes('hpovlsen') ? 'simplelogin.co' : '_spf.protonmail.ch';
-        if (spf) {
-            pass('J', 'SPF record', spf.length > 80 ? spf.slice(0, 80) + '…' : spf);
+        if (hit) {
+            const via = hit.domain !== apex ? ` (on parent domain ${hit.domain})` : '';
+            pass('J', 'SPF record', (hit.value.length > 80 ? hit.value.slice(0, 80) + '…' : hit.value) + via);
         } else {
             warn('J', 'SPF record', 'No SPF TXT record found', null,
                 `Add SPF TXT record to ${apex}, e.g. "v=spf1 include:${spfInclude} ~all"`);
@@ -772,13 +792,12 @@ async function checkDnsSecurity() {
 
     // DMARC
     try {
-        const data = await dnsQuery(`_dmarc.${apex}`, 'TXT');
-        const txts = (data.Answer || []).filter(r => r.type === 16).map(r => (r.data || '').replace(/^"|"$/g, ''));
-        const dmarc = txts.find(t => t.startsWith('v=DMARC1'));
-        if (dmarc) {
-            const policy = (dmarc.match(/p=(\w+)/) || [])[1] || 'none';
+        const hit = await findTxtWithFallback(`_dmarc.${apex}`, t => t.startsWith('v=DMARC1'), mailParent ? `_dmarc.${mailParent}` : null);
+        if (hit) {
+            const policy = (hit.value.match(/p=(\w+)/) || [])[1] || 'none';
+            const via = hit.domain !== `_dmarc.${apex}` ? ` (on parent domain ${hit.domain})` : '';
             if (policy === 'reject' || policy === 'quarantine') {
-                pass('J', 'DMARC record', dmarc.length > 80 ? dmarc.slice(0, 80) + '…' : dmarc);
+                pass('J', 'DMARC record', (hit.value.length > 80 ? hit.value.slice(0, 80) + '…' : hit.value) + via);
             } else {
                 warn('J', 'DMARC record', `Policy p=${policy} — consider p=quarantine or p=reject`, null,
                     'Tighten DMARC policy once legitimate mail flows are verified.');
@@ -795,23 +814,27 @@ async function checkDnsSecurity() {
     const dkimSelectors = hostname.includes('hpovlsen')
         ? ['dkim', 'dkim2', 'dkim3', 'default', 'mail', 'k1', 's1', 's2']
         : ['protonmail', 'protonmail2', 'protonmail3', 'default', 'mail', 'k1', 's1', 's2'];
+    const dkimDomains = mailParent ? [apex, mailParent] : [apex];
     let dkimFound = false;
-    for (const sel of dkimSelectors) {
-        try {
-            const data = await dnsQuery(`${sel}._domainkey.${apex}`, 'TXT');
-            const answers = data.Answer || [];
-            const txts = answers.filter(r => r.type === 16).map(r => r.data || '');
-            const hasCname = answers.some(r => r.type === 5); // CNAME delegation (e.g. Proton Mail)
-            if (txts.some(t => t.includes('p=')) || hasCname) {
-                const via = hasCname && !txts.some(t => t.includes('p=')) ? ' (CNAME delegation)' : '';
-                pass('J', 'DKIM record', `Selector "${sel}._domainkey.${apex}" found${via}`);
-                dkimFound = true;
-                break;
-            }
-        } catch (_) { /* try next */ }
+    outer:
+    for (const domain of dkimDomains) {
+        for (const sel of dkimSelectors) {
+            try {
+                const data = await dnsQuery(`${sel}._domainkey.${domain}`, 'TXT');
+                const answers = data.Answer || [];
+                const txts = answers.filter(r => r.type === 16).map(r => r.data || '');
+                const hasCname = answers.some(r => r.type === 5); // CNAME delegation (e.g. Proton Mail)
+                if (txts.some(t => t.includes('p=')) || hasCname) {
+                    const via = hasCname && !txts.some(t => t.includes('p=')) ? ' (CNAME delegation)' : '';
+                    pass('J', 'DKIM record', `Selector "${sel}._domainkey.${domain}" found${via}`);
+                    dkimFound = true;
+                    break outer;
+                }
+            } catch (_) { /* try next */ }
+        }
     }
     if (!dkimFound) {
-        warn('J', 'DKIM record', `No DKIM record found (tried: ${dkimSelectors.join(', ')})`, null,
+        warn('J', 'DKIM record', `No DKIM record found (tried: ${dkimSelectors.join(', ')} on ${dkimDomains.join(', ')})`, null,
             `Configure DKIM with your mail provider and publish the public key at <selector>._domainkey.${apex}. ` +
             'If your selector is non-standard, verify with: dig TXT <selector>._domainkey.' + apex);
     }

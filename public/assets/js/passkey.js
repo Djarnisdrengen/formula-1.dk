@@ -28,12 +28,14 @@
         return el ? el.value : '';
     }
 
-    function post(action, fields) {
+    function post(action, fields, signal) {
         var fd = new FormData();
         fd.append('action', action);
         fd.append('csrf_token', csrfToken());
         Object.keys(fields || {}).forEach(function (k) { fd.append(k, fields[k]); });
-        return fetch('/webauthn.php', { method: 'POST', body: fd, credentials: 'same-origin' })
+        var opts = { method: 'POST', body: fd, credentials: 'same-origin' };
+        if (signal) opts.signal = signal;
+        return fetch('/webauthn.php', opts)
             .then(function (r) { return r.json(); })
             .catch(function () { return null; });
     }
@@ -69,6 +71,65 @@
                     if (v && v.ok) window.location.reload(); else fail(btn);
                 });
             }).catch(function () { fail(btn); });
+        });
+    }
+
+    // Shared with loginConditional() below: any explicit ceremony on login.php must
+    // abort a pending conditional get() first — overlapping get() calls are spec-rejected.
+    var conditionalAbort = null;
+    var conditionalCancelled = false;
+
+    function abortConditional() {
+        conditionalCancelled = true;
+        if (conditionalAbort) {
+            conditionalAbort.abort();
+            conditionalAbort = null;
+        }
+    }
+
+    // Fires unconditionally on init() (login.php only, via the [data-passkey-login] guard)
+    // so the browser gets a competing WebAuthn signal instead of popping its own native
+    // saved-password sheet. conditionalCancelled is checked at every async continuation,
+    // not just via AbortController, because the controller is created before
+    // isConditionalMediationAvailable() itself resolves — see plan.md Step 1.2.
+    //
+    // Load-bearing: the AbortController is created BEFORE the login_options fetch, and its
+    // signal is threaded into that fetch too, not just the later get() call. The server's
+    // WebAuthn challenge is a single session slot (one outstanding ceremony at a time —
+    // see passkeyChallengeBegin() in includes/passkey.php) — a login_options request that
+    // reaches the server after abortConditional() already ran would silently overwrite the
+    // challenge an explicit ceremony just fetched, breaking its own verify step even though
+    // its get() call never overlapped. Wiring the signal into the fetch itself, not just
+    // get(), lets a still-in-flight request actually be cancelled instead of merely ignored.
+    function loginConditional() {
+        if (!window.PublicKeyCredential || !PublicKeyCredential.isConditionalMediationAvailable) return;
+        if (!document.querySelector('[data-passkey-login]')) return;   // login.php only
+        PublicKeyCredential.isConditionalMediationAvailable().then(function (available) {
+            if (!available || conditionalCancelled) return;
+            conditionalAbort = new AbortController();
+            post('login_options', {}, conditionalAbort.signal).then(function (res) {
+                if (conditionalCancelled || !res || !res.options || !res.options.publicKey) return;
+                var pk = res.options.publicKey;
+                pk.challenge = b64uToBuf(pk.challenge);
+                (pk.allowCredentials || []).forEach(function (c) { c.id = b64uToBuf(c.id); });
+                navigator.credentials.get({ publicKey: pk, mediation: 'conditional', signal: conditionalAbort.signal })
+                    .then(function (cred) {
+                        conditionalAbort = null;
+                        if (!cred) return;
+                        var fields = {
+                            rawId: bufToB64(cred.rawId),
+                            clientDataJSON: bufToB64(cred.response.clientDataJSON),
+                            authenticatorData: bufToB64(cred.response.authenticatorData),
+                            signature: bufToB64(cred.response.signature),
+                            userHandle: cred.response.userHandle ? bufToB64(cred.response.userHandle) : ''
+                        };
+                        return post('login_verify', fields).then(function (v) {
+                            if (v && v.ok && v.redirect) window.location.href = v.redirect;
+                            // else: no credential matched — silent, same as the button's own catch()
+                        });
+                    })
+                    .catch(function () { conditionalAbort = null; });   // aborted, or no tap — silent
+            });
         });
     }
 
@@ -115,9 +176,14 @@
             var login = e.target.closest('[data-passkey-login]');
             if (login) {
                 e.preventDefault();
+                abortConditional();
                 assertFlow(login, 'login_options', 'login_verify', { redirect: login.getAttribute('data-redirect') || '' });
             }
         });
+        // loginForm only exists on login.php — safe no-op on profile.php/mfa_challenge.php.
+        var loginForm = document.getElementById('loginForm');
+        if (loginForm) loginForm.addEventListener('submit', abortConditional);
+        loginConditional();
     }
 
     var api = { b64uToBuf: b64uToBuf, bufToB64: bufToB64 };

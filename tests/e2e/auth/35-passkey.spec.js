@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const path = require('path');
 const seed = require('../../helpers/seed');
 const mail = require('../../helpers/intercepted-mail');
+const { disableConditionalMediation } = require('../../helpers/webauthn');
 
 // Passkey happy paths via Chromium's CDP virtual authenticator (ctap2/internal,
 // resident key + UV, automatic presence). Real credentials cannot be seeded
@@ -116,7 +117,13 @@ test.describe('Passkey (WebAuthn) authentication', { tag: '@auth' }, () => {
     let user;
 
     // Fresh user per test: no factors, no recovery codes, no passkey rows.
-    test.beforeEach(async () => { user = await seed.authUser(); });
+    // disableConditionalMediation() stops a background conditional get() from racing this
+    // file's own explicit button-click/form-submit steps (see tests/helpers/webauthn.js).
+    // The one test that wants the conditional path re-enables it deliberately (CU-01/02/04).
+    test.beforeEach(async ({ page }) => {
+        user = await seed.authUser();
+        await disableConditionalMediation(page);
+    });
     test.afterAll(async () => { await seed.cleanup.authUser(); });
 
     test('password-only login reaches index (regression)', async ({ page }) => {
@@ -434,5 +441,81 @@ test.describe('Passkey (WebAuthn) authentication', { tag: '@auth' }, () => {
         await page.goto('/logout.php');
         await login(page, user.email, user.password);
         await page.waitForURL(/index\.php/); // no challenge — password-only restored
+    });
+
+    // ── Conditional-mediation UI (Passkey autofire epic) ────────────────────
+    // These three deliberately re-enable isConditionalMediationAvailable(), overriding
+    // this file's blanket beforeEach stub, since they exist specifically to exercise it.
+
+    test('conditional UI logs in without an explicit click (CU-01)', async ({ page }) => {
+        await addVirtualAuthenticator(page);
+        await login(page, user.email, user.password);
+        await page.waitForURL(/index\.php/);
+        await registerPasskey(page);
+        await dismissRecoveryCodes(page);
+        await page.goto('/logout.php');
+
+        // Override the beforeEach stub back on for this test only.
+        await page.addInitScript(() => {
+            if (window.PublicKeyCredential && window.PublicKeyCredential.isConditionalMediationAvailable) {
+                window.PublicKeyCredential.isConditionalMediationAvailable = () => Promise.resolve(true);
+            }
+        });
+        await page.goto('/login.php');
+        await page.waitForURL(/index\.php/);   // no click, no form submit — conditional get() alone
+    });
+
+    test('explicit passkey button aborts a pending conditional request (CU-02)', async ({ page }) => {
+        await addVirtualAuthenticator(page);
+        await login(page, user.email, user.password);
+        await page.waitForURL(/index\.php/);
+        await registerPasskey(page);
+        await dismissRecoveryCodes(page);
+        await page.goto('/logout.php');
+
+        await page.addInitScript(() => {
+            if (window.PublicKeyCredential && window.PublicKeyCredential.isConditionalMediationAvailable) {
+                window.PublicKeyCredential.isConditionalMediationAvailable = () => Promise.resolve(true);
+            }
+        });
+        // Hold only the FIRST login_options call (the background conditional one, which
+        // fires on page load before any click can happen) — let every later call through
+        // immediately, including the explicit button's own login_options fetch.
+        let heldOnce = false, releaseDelay;
+        const firstCallHeld = new Promise((resolve) => { releaseDelay = resolve; });
+        await page.route('**/webauthn.php', async (route) => {
+            // post() sends a multipart/form-data body (FormData), not a urlencoded
+            // "action=login_options" string — the action name shows up as its own
+            // multipart part instead. Substring match is still safe here: only the
+            // login_options request's action value is ever "login_options".
+            const body = route.request().postData() || '';
+            if (body.includes('login_options') && !heldOnce) { heldOnce = true; await firstCallHeld; }
+            await route.continue();
+        });
+
+        await page.goto('/login.php');
+        const btn = page.locator('[data-testid="passkey-login"]');
+        await expect(btn).toBeVisible();
+        await btn.click();     // explicit flow starts while the background one is still held
+        releaseDelay();        // let the background call through afterward
+        await page.waitForURL(/index\.php/);   // explicit flow completes cleanly — no overlapping-get() failure
+    });
+
+    test('conditional UI enabled with no credential: password login unaffected (CU-04)', async ({ page }) => {
+        // No addVirtualAuthenticator — nothing exists to resolve navigator.credentials.get().
+        const pageErrors = [];
+        page.on('pageerror', (e) => pageErrors.push(e));
+
+        await page.addInitScript(() => {
+            if (window.PublicKeyCredential && window.PublicKeyCredential.isConditionalMediationAvailable) {
+                window.PublicKeyCredential.isConditionalMediationAvailable = () => Promise.resolve(true);
+            }
+        });
+        await page.goto('/login.php');
+        await page.fill('input[name="email"]', user.email);
+        await page.fill('input[name="password"]', user.password);
+        await page.click('button[type="submit"]');
+        await page.waitForURL(/index\.php/);   // normal password login, unaffected by the background attempt
+        expect(pageErrors).toHaveLength(0);    // an unresolved/rejected background get() must stay caught, not thrown
     });
 });

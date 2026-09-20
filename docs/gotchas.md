@@ -27,6 +27,7 @@
 - [23. sync:live also wipes challenge_participants — there's no live copy to restore it from](#23-synclive-also-wipes-challenge_participants--theres-no-live-copy-to-restore-it-from)
 - [24. A hand-built POST to a bulk-delete/bulk-update handler needs `ids[]`, not repeated `ids`](#24-a-hand-built-post-to-a-bulk-deletebulk-update-handler-needs-ids-not-repeated-ids)
 - [25. Sessions are DB-backed, not PHP's default file sessions](#25-sessions-are-db-backed-not-phps-default-file-sessions)
+- [26. Conditional-mediation WebAuthn must stay scoped to login.php, and e2e specs must stub it off](#26-conditional-mediation-webauthn-must-stay-scoped-to-loginphp-and-e2e-specs-must-stub-it-off)
 
 ---
 
@@ -280,3 +281,14 @@ Consequences to know about:
 - Cleanup is **not** PHP's per-request probabilistic `session.gc` (unreliable by design, and part of what got us here) — it's the dedicated `public/cron/session_gc.php` cron (hourly, `.github/workflows/cron-session-gc.yml`), which deletes rows past `SESSION_ABSOLUTE_TIMEOUT`.
 - `sessions` is a normal migration-gated table (`database/add_sessions.sql`, registered in `database/migrations.json`) — forgetting to run it on an environment fails loud via the deploy schema check (gotcha #18), not silently.
 - `public/paddock-rumors/query.php` used to call a bare `session_start()` of its own before `config.php` was even required — that started a session under PHP's *default* file handler before `DbSessionHandler` got registered, silently defeating this fix for that one endpoint (and was already logging harmless-but-noisy "session already active" warnings). Removed; that page now gets its session from `config.php`'s chain like every other page. If you add a new entry point, don't call `session_start()` yourself — `require config.php` and let `config.shared.php` do it.
+
+## 26. Conditional-mediation WebAuthn must stay scoped to `login.php`, and e2e specs must stub it off
+
+`public/assets/js/passkey.js`'s `loginConditional()` fires `navigator.credentials.get({mediation:'conditional'})` unconditionally on `init()`, gated only by the `[data-passkey-login]` DOM marker — which currently renders only on `login.php`. Never remove that guard or call `loginConditional()` from a page-specific script on `profile.php` or `mfa_challenge.php`: `passkey.js` is loaded on both, and an anonymous discoverable-credential login attempt firing on `mfa_challenge.php` in particular would race an unrelated passwordless login against a two-step challenge already mid-flight in `$_SESSION['mfa_pending']`.
+
+Two independent e2e traps follow from the same feature:
+
+- Chromium's CDP virtual authenticator (`WebAuthn.addVirtualAuthenticator`) does not enforce the spec's real-user-gesture requirement before resolving a conditional `get()`. With `automaticPresenceSimulation: true`, any pending conditional request auto-resolves the instant a matching resident credential exists — no simulated tap, no real interaction — which will race ahead of a test's own explicit button-click or password-submit steps and complete the login first, mid-test.
+- Plain headless Chromium reports `isConditionalMediationAvailable()` as `true` even with **no** virtual authenticator attached at all — enough on its own to fire a background `login_options` call and plant a fresh session challenge in a test that assumed none would exist.
+
+Fix: every spec that navigates to `/login.php` stubs the capability check off via `disableConditionalMediation(page)` (`tests/helpers/webauthn.js`), called before any `page.goto()`. `tests/e2e/auth/35-passkey.spec.js` and `36-passkey-negative.spec.js` both do this in `beforeEach`; the handful of tests written specifically to exercise the conditional path (`CU-01`/`CU-02`/`CU-04` in `35-passkey.spec.js`) re-enable it deliberately, per-test, after the blanket stub already ran.

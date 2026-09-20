@@ -153,6 +153,7 @@ switch ($action) {
     case 'login_options': {
         if (getCurrentUser()) passkeyJsonFail();
         try {
+            logToFile(APP_LOG_FILE, '[PASSKEY] login_options ip=' . $ip);
             // Discoverable credentials: no user context, empty allow-list.
             passkeyJsonOut(['options' => passkeyAssertOptions($db, null, 'login')]);
         } catch (Throwable $e) {

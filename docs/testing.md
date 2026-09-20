@@ -28,6 +28,7 @@
   - [auth/32-mfa-default-method.spec.js](#auth32-mfa-default-methodspecjs)
   - [auth/35-passkey.spec.js](#auth35-passkeyspecjs)
   - [auth/36-passkey-negative.spec.js](#auth36-passkey-negativespecjs)
+  - [auth/37-passkey-nudge.spec.js](#auth37-passkey-nudgespecjs)
 - [Email Preview](#email-preview)
 - [Resend Health Check](#resend-health-check)
 - [Security Tests](#security-tests)
@@ -172,6 +173,7 @@ tests/fixtures/index.js           — Playwright fixture: adminPage (applies adm
 tests/helpers/seed.js             — typed wrappers for all test-seed.php actions (Node fetch, no browser)
 tests/helpers/intercepted-mail.js — email helper: waitForMessages, waitForNewMessages, assertDelivered (intercept mode)
 tests/helpers/markers.js          — parses e2e_markers strings emitted by admin.php in test mode
+tests/helpers/webauthn.js         — disableConditionalMediation(page): stubs isConditionalMediationAvailable() off
 ```
 
 `seed.js` is Stack A only — it reads `process.env.BASE_URL` set by `playwright.config.js`. Do not import it from standalone scripts.
@@ -609,6 +611,8 @@ The assertions are primary-method-agnostic by design, so a fresh pre-enrolled us
 
 Test env only. Serial (25s timeout — shared account; email/SMTP round-trips need headroom). Fresh user re-seeded `beforeEach` (FKs cascade every factor away). Uses Chromium's CDP virtual authenticator (`ctap2`/`internal`, resident key + user verification, automatic presence) — real credentials can't be seeded server-side, so every test enrolls through the profile UI on its own page. **Not part of smoke.**
 
+`beforeEach` also calls `disableConditionalMediation(page)` (see gotcha #26) so the conditional-UI background request never races this file's own explicit login steps. The three `CU-*` tests below deliberately re-enable it.
+
 | Test | Asserts |
 |---|---|
 | Password-only login reaches index (regression) | No factor yet → straight to `index.php` |
@@ -624,12 +628,17 @@ Test env only. Serial (25s timeout — shared account; email/SMTP round-trips ne
 | Recovery code is the break-glass while a passkey is primary (CHA-08) | Dropping to recovery from the passkey panel redeems a code and promotes the session |
 | Admin strips two-step factors; member returns to password-only (support path) | Admin's "remove MFA" action (Users tab) clears the member's passkey; button disappears; the member's next login skips the challenge entirely |
 | Revoke requires the password; removing it restores password-only (REV-01/REV-02) | Wrong password leaves the row in place; correct password removes it and restores password-only login |
+| Conditional UI logs in without an explicit click (CU-01) | Re-enables the stub; page load alone (no click, no submit) reaches `index.php` via `navigator.credentials.get({mediation:'conditional'})` |
+| Explicit passkey button aborts a pending conditional request (CU-02) | `page.route()` holds the background `login_options` call open; the explicit button's own flow still completes cleanly — proves `conditionalCancelled` stops the held chain from reaching `get()` after the click |
+| Conditional UI enabled, no credential: password login unaffected (CU-04) | No virtual authenticator attached; normal password login still reaches `index.php` with zero uncaught page errors from the unresolved background attempt |
 
 ---
 
 ### `auth/36-passkey-negative.spec.js`
 
 Test env only. Serial. Bypass and enumeration-parity negatives for `webauthn.php` — no virtual authenticator needed, since every case must fail before crypto is ever evaluated. POSTs go through in-page `fetch()` (`page.evaluate`), not `page.request`: the Simply.com WAF challenges non-browser network stacks (see [gotchas.md](gotchas.md) / memory "no curl"), while the browser's own fetch is already past that check. True valid-assertion replay is covered separately by challenge single-use in `tests/unit/passkey-harness.php`.
+
+`beforeEach` calls `disableConditionalMediation(page)` (see gotcha #26) — plain headless Chromium reports `isConditionalMediationAvailable()` true with no virtual authenticator attached at all, which would otherwise plant a session challenge ahead of this file's own explicit `login_options` calls (e.g. PWL-03).
 
 | Test | Asserts |
 |---|---|
@@ -641,6 +650,22 @@ Test env only. Serial. Bypass and enumeration-parity negatives for `webauthn.php
 | All failure modes return the byte-identical generic body (PWL-04 parity) | 5 distinct failure paths (no-pending, no-challenge, bad-credential after valid options, unknown action, logged-out register) all return the exact same response body — no failure mode is distinguishable from the outside |
 
 `afterAll` also clears `login_attempts` — the garbage `login_verify` posts each record a failed attempt, and would otherwise rate-limit a re-run (or global-setup's admin login) within the 15-minute window.
+
+---
+
+### `auth/37-passkey-nudge.spec.js`
+
+Test env only. Serial (25s timeout). Fresh user re-seeded `beforeEach`. Covers the one-time post-login enrollment nudge (`includes/passkey-nudge.php`) — branch-1 scope only (password-only login, zero active second factors), per the epic's resolved Scope decision. **Not part of smoke.**
+
+`beforeEach` also calls `disableConditionalMediation(page)` for the same reason as `35-passkey.spec.js`.
+
+| Test | Asserts |
+|---|---|
+| Password-only login with zero passkeys shows the nudge once (NDG-01) | Visible right after login; gone after a reload — single-read, not just dismissed |
+| Dismissing the nudge removes it immediately (NDG-02) | Client-side `.remove()` — panel gone from the DOM with no reload |
+| Member with a passkey never sees the nudge, via the second-factor challenge (NDG-03) | `userHasActiveFactor()` routes login through `mfa_challenge.php`, not branch 1 — the flag is never written |
+| Member who logs in via the passwordless button never sees the nudge (NDG-05) | Different code path from NDG-03: `webauthn.php`'s `login_verify` → `passkeyPromoteSession()`, which also never writes the flag |
+| 2FA member without a passkey does not see the nudge (NDG-04) | TOTP-only enrollment still routes through the challenge branch — locks in the branch-2-out-of-scope decision as a regression guard |
 
 ---
 

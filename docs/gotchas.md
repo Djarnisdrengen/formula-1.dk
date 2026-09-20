@@ -208,17 +208,17 @@ Migrations (`database/*.sql` and inline `ALTER`s in `schema.sql`) are applied by
 
 ## 19. The test-environment banner is gated by `APP_ENV` — never loosen the guard
 
-`public/includes/header.php` renders a yellow "Dette er en testhjemmeside" banner only when `APP_ENV === 'test'`. The banner is only ever allowed on hpovlsen.dk — never formula-1.dk (owner decision, 2026-07-05). The guard is server-side config, deliberately **not** `$_SERVER['HTTP_HOST']` (client-controlled). Don't remove the guard, don't switch it to Host-header sniffing, and don't raise the banner's `z-index` above the nav drawer's 30. The `deploy:live` E2E gate (`tests/e2e/01-smoke.spec.js`) asserts the banner is absent on live and rolls back the deploy if it isn't. Full spec: `epics/design_handoff_test_banner/`.
+`public/includes/header.php` renders a yellow "Dette er en testhjemmeside" banner only when `APP_ENV === 'test'`. The banner is only ever allowed on formula-1.helvegpovlsen.dk — never formula-1.dk (owner decision, 2026-07-05). The guard is server-side config, deliberately **not** `$_SERVER['HTTP_HOST']` (client-controlled). Don't remove the guard, don't switch it to Host-header sniffing, and don't raise the banner's `z-index` above the nav drawer's 30. The `deploy:live` E2E gate (`tests/e2e/01-smoke.spec.js`) asserts the banner is absent on live and rolls back the deploy if it isn't. Full spec: `epics/design_handoff_test_banner/`.
 
 ---
 
 ## 20. Passkeys are bound to `PASSKEY_RPID` — a one-way door per environment
 
-Every passkey is cryptographically bound to the WebAuthn relying-party id: the **registrable domain**, `hpovlsen.dk` (test) / `formula-1.dk` (live), set as `PASSKEY_RPID` in each config. **Changing it after members have registered orphans every passkey silently** — logins just stop working. That's why `passkeyRpId()` (`public/includes/passkey.php`) fails loud unless the constant is present *and* matches the domain derived from `SITE_URL`: a config edit that changes the domain becomes an immediate error, not silent orphaning.
+Every passkey is cryptographically bound to the WebAuthn relying-party id: the **registrable domain**, `formula-1.helvegpovlsen.dk` (test) / `formula-1.dk` (live), set as `PASSKEY_RPID` in each config. **Changing it after members have registered orphans every passkey silently** — logins just stop working. That's why `passkeyRpId()` (`public/includes/passkey.php`) fails loud unless the constant is present *and* matches the domain derived from `SITE_URL`: a config edit that changes the domain becomes an immediate error, not silent orphaning.
 
 Consequences to keep in mind:
 
-- **Test and live credentials are not interchangeable** — a passkey registered on hpovlsen.dk can never sign in on formula-1.dk, and vice versa.
+- **Test and live credentials are not interchangeable** — a passkey registered on formula-1.helvegpovlsen.dk can never sign in on formula-1.dk, and vice versa.
 - **`sync:live` clears `user_passkeys` on the test copy** (`sync-from-live.php`, verified fail-loud by `sync.js`). Live rows would be unusable on test *and* would gate those members' test logins behind a factor that cannot be satisfied — `passkeyActive()` feeds `userHasActiveFactor()`, which triggers the two-step login.
 - **Registration and challenge verification must always ship together.** A member's *first* `user_passkeys` row immediately gates their password login, so a deploy that carries registration without the `mfa_challenge.php` passkey block + `webauthn.php` verify actions locks that member down to recovery codes.
 - **Sign counts are advisory.** Most platform authenticators always report 0; the clone check in `passkeyAssertVerify()` only rejects when both stored and new counters are non-zero. Don't "harden" it into a lockout — you'd lock out every iCloud/Google-synced passkey.

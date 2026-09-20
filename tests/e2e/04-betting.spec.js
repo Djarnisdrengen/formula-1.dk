@@ -10,7 +10,7 @@ let sharedPage;
 // so the full name in the email comes from the DB and may differ from seedData.
 const lastName = (driver) => driver.name.split(" ").pop();
 
-// e.g. "Registreret på www.hpovlsen.dk: 05 Jul 2026 - 14:32 CET"
+// e.g. "Registreret på www.formula-1.helvegpovlsen.dk: 05 Jul 2026 - 14:32 CET"
 const TIMESTAMP_RE = /\d{2} [A-Za-z]{3} \d{4} - \d{2}:\d{2} CET/;
 
 function assertConfirmationBody(body, driversInOrder) {

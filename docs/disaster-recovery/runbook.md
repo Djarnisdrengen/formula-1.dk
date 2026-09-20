@@ -74,7 +74,7 @@ Copy `config.example.php` to `config.live.php` and fill in all constants from yo
 Same process as step 3, using:
 - `APP_ENV = 'test'`
 - `DB_NAME` pointing to the test database
-- `SITE_URL = 'https://www.hpovlsen.dk'`
+- `SITE_URL = 'https://www.formula-1.helvegpovlsen.dk'`
 - `LIVE_DB_NAME` pointing to the live DB (used by `sync-from-live.php`)
 
 Required before the DR Drill verification steps can run.
@@ -216,7 +216,7 @@ Feature: Disaster Recovery restore path
     And the test database has been wiped (all rows deleted)
     When I run `npm run restore:db -- --env test` selecting the artifact
     Then `npm run test:e2e:test` passes with 0 failures
-    And admin login works at https://www.hpovlsen.dk
+    And admin login works at https://www.formula-1.helvegpovlsen.dk
 
   Scenario: restore:db requires YES for both environments
     Given a backup exists

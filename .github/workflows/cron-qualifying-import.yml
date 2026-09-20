@@ -16,7 +16,7 @@ name: Cron — Qualifying Results Import
 #
 # Runs against both environments on the same schedule (full parity, chosen knowingly):
 # on test this calls the real Jolpica API every 5 minutes for ~18h every Saturday and
-# writes into the hpovlsen.dk races table, which test-seed.php periodically wipes for
+# writes into the formula-1.helvegpovlsen.dk races table, which test-seed.php periodically wipes for
 # E2E runs -- an unattended import can land mid-reseed. Accepted tradeoff, not a bug.
 #
 # dry_run=true works against test (tools/f1_testdata.php ships there) but NOT against

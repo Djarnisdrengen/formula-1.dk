@@ -193,7 +193,7 @@ module.exports = { runSmoke };
 if (require.main === module) {
     const baseUrl = process.env.BASE_URL || process.argv[2];
     if (!baseUrl) {
-        console.error("Usage: BASE_URL=https://hpovlsen.dk node tests/smoke.js");
+        console.error("Usage: BASE_URL=https://formula-1.helvegpovlsen.dk node tests/smoke.js");
         process.exit(1);
     }
     runSmoke(baseUrl).then(ok => process.exit(ok ? 0 : 1));

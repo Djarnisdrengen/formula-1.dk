@@ -9,7 +9,7 @@ name: Cron — Email Notifications
 # security-findings-remaining.md).
 #
 # Runs against both environments on the same schedule. Test-env runs against whatever
-# is currently in the hpovlsen.dk DB — SMTP_INTERCEPT is NOT active outside an E2E
+# is currently in the formula-1.helvegpovlsen.dk DB — SMTP_INTERCEPT is NOT active outside an E2E
 # run (gotcha #17 in docs/gotchas.md), so this sends real, non-intercepted email on
 # test too; that's an accepted tradeoff for full schedule parity, not an oversight.
 on:

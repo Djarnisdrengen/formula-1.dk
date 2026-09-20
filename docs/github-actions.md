@@ -325,7 +325,7 @@ Variables are plain text and visible in the UI. Use them for non-sensitive confi
 | Variable | Example | Notes |
 |---|---|---|
 | `BASE_URL_LIVE` | `https://www.formula-1.dk` | Must use `www`. No trailing slash. |
-| `BASE_URL_TEST` | `https://www.hpovlsen.dk` | Must use `www`. No trailing slash. Used by the cron trigger workflows' `trigger-test` jobs. |
+| `BASE_URL_TEST` | `https://www.formula-1.helvegpovlsen.dk` | Must use `www`. No trailing slash. Used by the cron trigger workflows' `trigger-test` jobs. |
 | `SMTP_HOST` | `smtp.protonmail.com` | Mail server hostname |
 | `SMTP_PORT` | `587` | SMTP port |
 | `SMTP_FROM` | `noreply@formula-1.dk` | Sender address for the nightly report |

@@ -59,7 +59,7 @@ Open each file and fill in the values for the matching environment. Ask Thomas f
 
 Key sections to fill:
 - `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` — MySQL connection for that environment
-- `SITE_URL` — e.g. `https://www.hpovlsen.dk` for test
+- `SITE_URL` — e.g. `https://www.formula-1.helvegpovlsen.dk` for test
 - `F1_ADMIN_EMAIL`, `F1_ADMIN_PASSWORD` — the service admin account
 - `PASSWORD_PEPPER` — random 32-hex string (generate with `openssl rand -hex 32`)
 - `INTEGRATION_SEED_TOKEN`, `CRON_SECRET` — any random secret strings
@@ -102,7 +102,7 @@ See [Testing](testing.md) for what each suite does.
 ## Day-to-day workflow
 
 ```
-edit code → git commit → npm run deploy:test → verify on hpovlsen.dk → npm run deploy:live
+edit code → git commit → npm run deploy:test → verify on formula-1.helvegpovlsen.dk → npm run deploy:live
 ```
 
 Never deploy to live without confirming test is working first.
@@ -173,5 +173,5 @@ Set `php.validate.executablePath` to that path in settings.
 ## What you can skip
 
 - **Local MySQL** — you can develop and deploy without a local DB. The test server has its own database.
-- **Local PHP server** — same as above. Edit → deploy → verify on hpovlsen.dk.
+- **Local PHP server** — same as above. Edit → deploy → verify on formula-1.helvegpovlsen.dk.
 - **Local Apache** — the `.htaccess` file only matters on the real server.

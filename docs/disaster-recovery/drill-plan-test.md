@@ -26,7 +26,7 @@
 
 ## Context
 
-Drills the "Test server wiped" recovery path against `www.hpovlsen.dk`. Both files and DB are
+Drills the "Test server wiped" recovery path against `www.formula-1.helvegpovlsen.dk`. Both files and DB are
 destroyed and recovered. No risk to live. Run once per season or after any significant
 infrastructure change.
 
@@ -36,7 +36,7 @@ infrastructure change.
 
 | | |
 |---|---|
-| Site | www.hpovlsen.dk |
+| Site | www.formula-1.helvegpovlsen.dk |
 | Scope | Files + DB (full wipe) |
 | Restore path | Option B — programmatic (`npm run restore:db -- --env test`) |
 | Verification | 74 E2E tests (full suite) |
@@ -57,7 +57,7 @@ infrastructure change.
 
 ### Step 1.1 — Smoke-test the test site
 ```bash
-node tests/smoke.js https://www.hpovlsen.dk
+node tests/smoke.js https://www.formula-1.helvegpovlsen.dk
 ```
 **Expected:** `✅ 8/8 checks passed`. Fix any failures before proceeding.
 
@@ -86,7 +86,7 @@ fetch(cfg.siteUrl + '/tools/db-backup.php', { headers: { Authorization: 'Bearer 
 **Record the counts** — compare against these in step 4.5.
 
 ### Step 1.3 — Verify admin login
-Open `https://www.hpovlsen.dk`, log in as `f1_admin@helvegpovlsen.dk`.
+Open `https://www.formula-1.helvegpovlsen.dk`, log in as `f1_admin@helvegpovlsen.dk`.
 **Expected:** Admin panel loads with all tabs.
 
 ---
@@ -120,11 +120,11 @@ recovery value. Recreated empty by `schema.sql`.
 
 FTP/file manager → rename `public/` → `public.bak`.
 
-**Expected:** `https://www.hpovlsen.dk` returns 404/500 for all URLs.
+**Expected:** `https://www.formula-1.helvegpovlsen.dk` returns 404/500 for all URLs.
 
 ### Step 2.3 — Confirm destruction
 ```bash
-node tests/smoke.js https://www.hpovlsen.dk
+node tests/smoke.js https://www.formula-1.helvegpovlsen.dk
 ```
 **Expected:** `❌ 8/8 checks failed`
 
@@ -180,9 +180,9 @@ Select `[1] dr-drill-snapshot`, type `YES`.
 
 | Step | Command / Action | Expected |
 |---|---|---|
-| 4.1 Smoke tests | `node tests/smoke.js https://www.hpovlsen.dk` | `✅ 8/8` |
+| 4.1 Smoke tests | `node tests/smoke.js https://www.formula-1.helvegpovlsen.dk` | `✅ 8/8` |
 | 4.2 E2E tests | `npm run test:e2e:test` | 74/74 pass |
-| 4.3 Admin login | Browser: `https://www.hpovlsen.dk` → log in | Admin panel loads |
+| 4.3 Admin login | Browser: `https://www.formula-1.helvegpovlsen.dk` → log in | Admin panel loads |
 | 4.4 Cron qualifying | Node.js fetch with `Authorization: Bearer <CRON_SECRET>` to `import_qualifying.php` | `Cron token validation: VALID` |
 | 4.5 Cron notifications | Node.js fetch with `Authorization: Bearer <CRON_SECRET>` to `notifications.php` | `Notification check complete.` |
 | 4.6 Row counts | Node.js fetch backup endpoint, compare to step 1.2 | All tables match |
@@ -197,8 +197,8 @@ const { readPhpConfig } = require('./build-deploy/php-config');
 const cfg = readPhpConfig('test');
 const authHeader = { headers: { Authorization: 'Bearer ' + cfg.cronSecret } };
 Promise.all([
-  fetch('https://www.hpovlsen.dk/cron/import_qualifying.php', authHeader).then(r => r.text()),
-  fetch('https://www.hpovlsen.dk/cron/notifications.php', authHeader).then(r => r.text()),
+  fetch('https://www.formula-1.helvegpovlsen.dk/cron/import_qualifying.php', authHeader).then(r => r.text()),
+  fetch('https://www.formula-1.helvegpovlsen.dk/cron/notifications.php', authHeader).then(r => r.text()),
 ]).then(([q, n]) => {
   console.log('qualifying:', q.includes('VALID') ? '✅ VALID' : '❌ ' + q.slice(0,100));
   console.log('notifications:', n.trim() === 'Notification check complete.' ? '✅ ' + n.trim() : '❌ ' + n.slice(0,100));

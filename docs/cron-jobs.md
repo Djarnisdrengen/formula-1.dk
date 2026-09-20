@@ -166,7 +166,7 @@ visit can't set the `Authorization` header, and this host's WAF is documented to
 non-browser network stacks (see `docs/gotchas.md` / memory "no curl"):
 
 ```bash
-node -e "fetch('https://www.hpovlsen.dk/cron/import_qualifying.php?test=true', {headers:{Authorization:'Bearer '+process.env.CRON_SECRET}}).then(r=>r.text()).then(console.log)"
+node -e "fetch('https://www.formula-1.helvegpovlsen.dk/cron/import_qualifying.php?test=true', {headers:{Authorization:'Bearer '+process.env.CRON_SECRET}}).then(r=>r.text()).then(console.log)"
 ```
 
 The response is plain text / HTML with timestamped log lines.

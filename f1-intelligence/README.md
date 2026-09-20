@@ -72,7 +72,7 @@ $result = $intel->query("Your question");
 
 ## Documentation
 
-- **docs/DEPLOYMENT.md** - Step-by-step deployment for hpovlsen.dk + formula-1.dk
+- **docs/DEPLOYMENT.md** - Step-by-step deployment for formula-1.helvegpovlsen.dk + formula-1.dk
 - **docs/TESTING.md** - Testing strategy and test cases
 - **docs/ARCHITECTURE.md** - System design and data flow
 

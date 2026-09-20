@@ -168,6 +168,275 @@ Feature: Test site migrated to formula-1.helvegpovlsen.dk
       <project>.helvegpovlsen.dk
 ```
 
+## Implementation Plan (Step-by-Step)
+
+Consolidated, strictly-sequenced execution checklist. Full rationale for every step lives in the
+REQ/NFR it cites (`feature-1-hosting-dns-config-cutover.md`, `feature-2-reference-sweep-ci-convention.md`)
+— this section is the runbook, not a replacement for that detail. **As of 2026-09-20, nothing below
+has been executed** — `config.test.php` still reads `SITE_URL = https://www.hpovlsen.dk` /
+`PASSKEY_RPID = hpovlsen.dk`, and `build-deploy/.env` still has `FTP_ROOT_TEST=/hpovlsen.dk`.
+
+Order is load-bearing (NFR-802): DNS/hosting/TLS → config+FTP cutover (atomic) → validation →
+CI variable → doc sweep → convention doc → old-directory cleanup (strictly last). Steps marked
+**(manual)** are Simply.com-panel or FTP-client actions Djarnis (or an assistant with Djarnis
+present) performs outside this repo; steps marked **(gate)** require Djarnis's explicit sign-off
+before proceeding, per CLAUDE.md's f1-intelligence rule or this epic's own destructive-action rules.
+
+### Phase 1 — DNS, hosting & TLS (Feature 1) — ✅ done 2026-09-20
+
+- [x] 1.1 **(manual)** Create the `formula-1.helvegpovlsen.dk` DNS record on Simply.com, document
+      root `/test.formula-1.dk` on `linux350.unoeuro.com`. Confirm in the panel whether the folder
+      must pre-exist before pointing the subdomain at it, or whether either order works. (REQ-801)
+      — done by Djarnis.
+- [x] 1.2 Verify DNS propagation from an **external** resolver before touching anything else:
+      `dig +short formula-1.helvegpovlsen.dk` and `dig +short www.formula-1.helvegpovlsen.dk`.
+      (REQ-802a) — both resolve to `185.20.205.21`, confirmed 2026-09-20.
+- [x] 1.3 **(manual)** Issue/confirm a TLS cert covering `www.formula-1.helvegpovlsen.dk`
+      specifically (not just the bare subdomain — `.htaccess`'s www-forcing rule is host-agnostic).
+      Verify: `openssl s_client -connect www.formula-1.helvegpovlsen.dk:443 -servername www.formula-1.helvegpovlsen.dk`
+      and confirm the SAN list includes that exact host. (REQ-802) — confirmed 2026-09-20: cert
+      `CN=formula-1.helvegpovlsen.dk`, SAN covers both `formula-1.helvegpovlsen.dk` and
+      `www.formula-1.helvegpovlsen.dk`, valid 2026-09-13 → 2026-12-12.
+
+### Phase 2 — Determine the exact SITE_URL form — ⚠️ revised 2026-09-20
+
+- [x] 2.1 ~~POST-probe both host forms before picking `SITE_URL`~~ — **sequencing gap found**: the
+      www-forcing 301 (the thing REQ-803 is trying to detect) lives in the app's own
+      `public/.htaccess`, not a Simply.com panel/vhost setting. A single safe GET probe (Node's core
+      `https` module, matching `tests/smoke.js`'s known-safe request style — **not** `curl`/`fetch()`,
+      which the site-verification memory flags as liable to trip Simply.com's shared WAF and poison
+      later Playwright runs) against both `formula-1.helvegpovlsen.dk` and
+      `www.formula-1.helvegpovlsen.dk` returned a plain `200`, no `Location` header, from both —
+      confirming nothing is deployed to `/test.formula-1.dk` yet, so there is no redirect to probe
+      before Phase 3 deploys the app there. **Decision:** use `www.formula-1.helvegpovlsen.dk` as
+      `SITE_URL` now, matching the existing pattern on both `hpovlsen.dk` and `formula-1.dk` and the
+      fact that the redirect rule is host-agnostic application code, not per-domain config — no
+      reason to expect this third domain to behave differently once deployed. The actual empirical
+      confirmation (that `www.` does **not** drop a POST body) now happens as part of 3.3's
+      post-deploy smoke check instead of as a separate pre-deploy gate. (REQ-803)
+
+### Phase 3 — Config + FTP cutover (atomic — do 3.1 and 3.2 in the same commit/deploy) — ✅ done 2026-09-20
+
+- [x] 3.1 Edit `build-deploy/.env`: `FTP_ROOT_TEST=/hpovlsen.dk` → `FTP_ROOT_TEST=/test.formula-1.dk`.
+      Leave `FTP_ROOT_LIVE` untouched. (REQ-801a) — done 2026-09-20.
+- [x] 3.2 Edit `config.test.php` in the same change: `SITE_URL` → the form confirmed in 2.1;
+      `PASSKEY_RPID` → that host with any `www.` stripped (matches the existing
+      `preg_replace('/^www\./i', ...)` logic in `public/includes/passkey.php:27`). Do not deploy with
+      only one of 3.1/3.2 done — a partial state either uploads to an empty new folder with stale
+      config, or trips the `passkey.php` RuntimeException on every authenticated page. (REQ-804) —
+      done 2026-09-20: `SITE_URL=https://www.formula-1.helvegpovlsen.dk`,
+      `PASSKEY_RPID=formula-1.helvegpovlsen.dk`.
+- [x] 3.3 Deploy: `npm run deploy:test`. Confirm the built-in post-deploy smoke check passes against
+      the new domain — this run now also serves as Phase 2.1's deferred empirical confirmation that
+      `www.formula-1.helvegpovlsen.dk` does not drop a POST body via a 301 (login/bet-submission
+      checks in the smoke/e2e suite exercise real POSTs against it). If any POST-dependent check
+      fails with a redirect-looking symptom (body-less request, lost session), stop and re-examine
+      the `www.` vs bare-domain choice before continuing. (REQ-805, REQ-803) — done 2026-09-20:
+      deploy uploaded to `/test.formula-1.dk`, DB schema check passed, all 8/8 smoke checks passed
+      (200) against `https://www.formula-1.helvegpovlsen.dk`, including both authenticated checks,
+      which require a real POST login — confirms `www.` does not drop the POST body or session.
+- [x] 3.4 Spot-check that `/hpovlsen.dk` on the FTP server was **not** written to by this deploy —
+      it must keep serving the old domain untouched as a fallback until Phase 9. (Test Scenario,
+      Feature 1) — confirmed 2026-09-20 by the deploy log itself (`build-deploy/deploy.js` uploads
+      to the single `FTP_ROOT_TEST` path only): "✅ Done! Uploaded to /test.formula-1.dk", no writes
+      to `/hpovlsen.dk` in this run.
+
+### Phase 4 — Validation — ✅ done 2026-09-20
+
+- [x] 4.1 Run the full suite against the new domain: `npm run test:e2e:test`, `npm run test:smoke`.
+      Hold off on `npm run test:security` until Phase 6 (REQ-908 may require a code change first). —
+      done 2026-09-20. First attempt hit an unrelated local-sandbox gap (Playwright's Chromium
+      binary wasn't installed — `npx playwright install chromium` needed
+      `PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu22.04-x64` since the host OS isn't officially
+      supported), not a migration regression. After installing the browser, re-ran clean:
+      11/12 suites passed outright (Smoke, **Authentication** — real POST login/session flows —,
+      Invites & Registration, Podium Predictions, Auto-Scoring & Leaderboard, Race Page, Admin,
+      Profile & Stats, Appearance, Preferences Editor, Notifications & Cron Jobs). 1 test failed in
+      the 114-test Paddock Challenges suite ("correct option awards 5 CP and reveals the check");
+      re-ran in isolation and it passed — a pre-existing test-ordering/shared-state flake in that
+      suite, not a domain-related failure (nothing else in that suite or run touches host/URL
+      assumptions differently). `npm run test:smoke` also re-confirmed 8/8 separately.
+- [x] 4.2 Confirm SMTP interception is unaffected: trigger one email-generating e2e flow and confirm
+      it still lands in `EMAIL_INTERCEPT_FILE` — this is keyed off `APP_ENV`/a local path, not
+      `SITE_URL`, so this is a verification step only. (REQ-807) — confirmed via 4.1's run: the
+      Notifications & Cron Jobs suite and the Duels outcome-email tests both explicitly assert
+      emails were captured via interception, and passed, on the new domain.
+- [x] 4.3 No action needed on CSP (`public/includes/header.php:10-21`) — already confirmed
+      domain-agnostic. (REQ-807a, informational only)
+- [x] 4.4 **(manual)** If Djarnis has a real passkey registered against the old `hpovlsen.dk` test
+      site on his own device, confirm it now fails to authenticate, then register a new one on the
+      new domain and confirm it succeeds. The `35-passkey`/`36-passkey-negative` e2e specs need no
+      changes and cover the "new credential works" case automatically via virtual authenticators.
+      (REQ-806) — done by Djarnis, confirmed 2026-09-20.
+- [x] 4.5 **(manual)** Walk one admin login + one core podium-prediction betting flow end-to-end
+      against `formula-1.helvegpovlsen.dk` by hand. — done by Djarnis, confirmed 2026-09-20.
+- [x] 4.6 Run `formula-1.dk`'s live smoke/security gate before *and* after this epic's changes as a
+      negative control — results must be identical. (NFR-801, Success Metrics) — done 2026-09-20:
+      `npm run test:e2e:smoke:live` and `npm run test:security:live` both run by Djarnis, both
+      passed. Live is confirmed unaffected by this epic's changes.
+
+### Phase 5 — CI wiring (only after Phase 4 is green) — ✅ done 2026-09-20
+
+- [x] 5.1 Update the GitHub Actions repository **Variable** `BASE_URL_TEST` (Settings → Secrets and
+      variables → Actions → **Variables** tab, not Secrets) from `https://www.hpovlsen.dk` to the
+      value confirmed in 2.1. Confirm no stale `BASE_URL_TEST` **Secret** exists that would shadow
+      it. (REQ-901) — done 2026-09-20 via `gh variable set BASE_URL_TEST` on
+      `Djarnisdrengen/formula-1.dk`, new value `https://www.formula-1.helvegpovlsen.dk`, verified with
+      `gh variable list`. `gh secret list` confirmed no `BASE_URL_TEST` secret exists to shadow it.
+- [x] 5.2 Watch the next scheduled `trigger-test` job in `cron-notifications.yml` and
+      `cron-qualifying-import.yml` complete successfully against the new domain; re-confirm
+      `CRON_SECRET_TEST` still matches `config.test.php`'s `CRON_SECRET` (no rotation implied).
+      (REQ-902) — done 2026-09-20: rather than wait out the observed ~4-5h natural schedule slip,
+      Djarnis manually ran `gh workflow run cron-notifications.yml -f dry_run=true` himself (this
+      also fires `trigger-live` against `formula-1.dk`, which the Claude Code auto-mode classifier
+      correctly blocked me from dispatching — a live-touching action needing his own hands on it).
+      Run `35533425351`: both `trigger-live` and `trigger-test` jobs succeeded. `trigger-test`'s log
+      confirms `BASE_URL: https://www.formula-1.helvegpovlsen.dk`, the `CRON_SECRET_TEST` secret was
+      accepted (no rotation needed), and the script returned "Notification check complete." —
+      `cron-qualifying-import.yml` uses the identical `vars.BASE_URL_TEST` / `secrets.CRON_SECRET_TEST`
+      pattern (confirmed in 5.3), so this is treated as sufficiently covering both workflows rather
+      than requiring a second manual dispatch of a Saturday-only qualifying-import job with no race
+      qualifying session imminent.
+- [x] 5.3 Confirm neither workflow YAML hardcodes the old domain outside a comment (prior research
+      found none, but verify once against the live files). (NFR-902) — confirmed 2026-09-20:
+      `grep -n "hpovlsen" .github/workflows/*.yml` only matches comment text in
+      `cron-qualifying-import.yml:19` and `cron-notifications.yml:12`; both `trigger-test` jobs
+      already reference `${{ vars.BASE_URL_TEST }}` dynamically, no literal hardcoded domain.
+
+### Phase 6 — Security heuristic check — ✅ done 2026-09-20
+
+- [x] 6.1 Determine whether `helvegpovlsen.dk`'s actual mail setup is SimpleLogin-style or
+      Proton-style (unknown as of this writing). (REQ-908, prerequisite) — confirmed via direct
+      Cloudflare DoH queries: `helvegpovlsen.dk` apex has `v=spf1 include:_spf.protonmail.ch
+      include:spf.simply.com -all`, MX to `mail.protonmail.ch`/`mailsec.protonmail.ch`, and
+      `_dmarc.helvegpovlsen.dk` = `v=DMARC1; p=quarantine`. **Proton-style**, not SimpleLogin.
+- [x] 6.2 If SimpleLogin-style (matching `hpovlsen.dk`), extend the
+      `hostname.includes('hpovlsen')` check at `tests/security/security.js:762,795` to also match
+      `helvegpovlsen`. If Proton-style, no code change — the existing `else` branch already does the
+      right thing. (REQ-908) — the `else` branch's SPF-include/DKIM-selector guess (proton) was
+      already right, but a **deeper bug** surfaced during 6.3: `tests/security/security.js`'s DNS
+      section derives its query domain as `hostname.replace(/^www\./, '')`, which for
+      `formula-1.helvegpovlsen.dk` produces the site's own subdomain, not the registrable domain
+      `helvegpovlsen.dk` where the SPF/MX/DMARC/DKIM records actually live (confirmed empirically —
+      `formula-1.helvegpovlsen.dk` has no TXT/DMARC records of its own, only an SOA). This never
+      showed up for `hpovlsen.dk` or `formula-1.dk` because both are 2-label apexes where site
+      hostname and mail domain coincide; it's new because `<project>.helvegpovlsen.dk` (the Phase 8
+      convention for *every future project*) is a 3-label subdomain of the actual mail domain. Fix
+      (Djarnis's explicit choice over "just document the false-positive"): added a
+      `findTxtWithFallback()` helper in `checkDnsSecurity()` — when the apex has >2 labels, SPF,
+      DMARC, and DKIM each retry once against the last-two-labels parent domain if nothing is found
+      at the exact apex, and the pass message notes `(on parent domain X)`. CAA and DNSSEC are
+      unchanged (checked on the exact hostname — DNSSEC already validates the full chain via the
+      resolver's AD flag regardless of label depth). For a 2-label apex, `mailParent` is `null` and
+      the fallback path never executes, so `formula-1.dk`/`hpovlsen.dk` behavior is byte-for-byte
+      unchanged (verified by code inspection, not by re-running against live — see 6.3).
+- [x] 6.3 Run `npm run test:security` against the new domain and confirm the SPF/DMARC/DKIM checks
+      pass or warn as expected. — done 2026-09-20: pre-fix run showed SPF/DMARC/DKIM all falsely
+      warning as missing (plus a genuine, pre-existing CAA gap at both domain levels — not a
+      migration regression). Post-fix run: SPF ✔ `include:_spf.protonmail.ch include:spf.simply.com
+      -all (on parent domain helvegpovlsen.dk)`, DMARC ✔ `p=quarantine (on parent domain
+      _dmarc.helvegpovlsen.dk)`, DKIM ✔ `Selector "protonmail._domainkey.helvegpovlsen.dk" found`.
+      CAA warning remains (no CAA record at either level) — out of scope for REQ-908, unrelated to
+      the domain migration. Did not re-run `test:security:live` — the live-gate policy from Phase
+      4.6 applies, and the fix is provably a no-op for 2-label apexes by inspection.
+
+### Phase 7 — Doc & script sweep — ✅ done 2026-09-20
+
+- [x] 7.1 Sweep every file in Feature 2 REQ-903's list, changing only occurrences that denote the
+      **site's hostname** (never an `@hpovlsen.dk` email address or mail-routing check — see
+      REQ-900's exclusion list, which must not be touched):
+      `docs/deployment.md`, `docs/testing.md`, `docs/github-actions.md`, `docs/admin-dashboards.md`,
+      `docs/cron-jobs.md`, `docs/gotchas.md`, `docs/getting-started.md`, `docs/commands.md`,
+      `docs/disaster-recovery/runbook.md`, `docs/disaster-recovery/drill-plan-test.md`,
+      `build-deploy/DEPLOYMENT.md` (reword the shorthand table to state the domain/FTP-path split
+      explicitly), `build-deploy/restore-db.js`'s warning label, `tests/smoke.js`'s usage string,
+      this repo's own `CLAUDE.md`, `.claude/settings.json` and `.claude/settings.local.json`'s
+      `hpovlsen.dk` permission-allowlist entries. — done: every file in the list had its hostname
+      mentions swapped to `formula-1.helvegpovlsen.dk` (or `www.formula-1.helvegpovlsen.dk` where the
+      original used `www.`); `docs/testing.md` needed no edit — every one of its `hpovlsen.dk`
+      mentions was already an `@hpovlsen.dk` email/fixture address, correctly excluded.
+      `build-deploy/DEPLOYMENT.md`'s `deploy:test` row was reworded to state the FTP path
+      (`/test.formula-1.dk`) and the served domain as two explicitly different strings, per this
+      item's parenthetical.
+- [x] 7.2 Audit `hpovlsen.dk` mentions in `tests/e2e/02-auth.spec.js`, `04-betting.spec.js`,
+      `05-profile.spec.js`, `07-cron.spec.js`, `tests/e2e/admin/11-invites.spec.js`,
+      `12-users.spec.js`, `13-scoring.spec.js` — confirm each is a comment/description string, not a
+      literal bypassing `BASE_URL` injection. Update comment text; escalate any literal found as a
+      Phase 3 blocker, not a doc fix. (REQ-904) — done: every mention across all 7 files is either an
+      `@hpovlsen.dk` fixture-email constant (correct per REQ-900, not a hostname literal) or, in
+      `04-betting.spec.js:13`, a stale illustrative comment (`// e.g. "Registreret på
+      www.hpovlsen.dk: ..."`) documenting an expected confirmation-email string — updated to
+      `www.formula-1.helvegpovlsen.dk`. Confirmed the actual assertion (`04-betting.spec.js:17`)
+      already derives the domain from `process.env.BASE_URL` at runtime, not a hardcoded literal — no
+      Phase 3 blocker needed.
+- [x] 7.3 **(gate)** Get Djarnis's explicit go-ahead, called out separately from the rest of the
+      sweep commit, before editing `docs/f1-intelligence-reference.md`, `f1-intelligence/README.md`,
+      `paddock-rumors/README.md`, `paddock-rumors/ROADMAP.md`. (REQ-905) — asked via AskUserQuestion,
+      separately from the rest of the sweep; Djarnis approved the hostname-only substitution (no
+      code/logic changes) in all 4 files. Applied. A second, adjacent batch of hostname mentions
+      surfaced during 7.4's verification in files not on this original list but in the same
+      f1-intelligence/paddock-rumors area (`f1-intelligence/docs/DEPLOYMENT.md`, `TESTING.md`,
+      `ARCHITECTURE.md`, `docs/paddock-rumors-reference.md`) — asked again as a separate, explicit
+      gate rather than assuming the first approval covered them; Djarnis approved the same
+      substitution there too.
+- [x] 7.4 Final sweep verification — not a bare zero-hit check: run `grep -rn "hpovlsen\.dk" .`
+      (excluding `node_modules`, `.git`, `build-deploy/backups`) and classify every hit as (a)
+      intentionally-preserved email domain, (b) intentionally-excluded historical record
+      (`epics/Archive/**`, etc.), or (c) a missed hostname reference — sweep is only done when (c) is
+      empty. Then run `grep -rn "helvegpovlsen\.dk" .` and confirm it turns up only the intended new
+      references plus the pre-existing, unrelated `f1_admin@helvegpovlsen.dk`. (NFR-901) — done:
+      final grep's remaining hits are all (a) `@hpovlsen.dk` email/fixture addresses (`test-seed.php`,
+      `sync-from-live.php`, `mfa_challenge.php`, the e2e specs, `docs/testing.md`, `docs/gotchas.md`,
+      `docs/commands.md`, `docs/test-strategy.md`) or (b) intentionally-excluded historical record —
+      `epics/Archive/**`, this epic's own planning docs (`plan.md`, `feature-1-*.md`, `feature-2-*.md`,
+      `test-strategy-review.md` — describing the pre-migration state by design), the frozen
+      design-handoff mockup exports under `epics/Admin area redesign/` (static point-in-time HTML
+      snapshots with baked-in example values, not living docs), and the completed-work changelog
+      entries in `security-findings-remaining.md` / `paddock-rumors/SESSION_HANDOVER.md`. Category
+      (c) is empty. Two comment-only hostname mentions were also found and fixed along the way in
+      `.github/workflows/cron-qualifying-import.yml` and `cron-notifications.yml` (not in REQ-903's
+      list but same-file, low-risk comment text). `helvegpovlsen.dk` grep confirms only the intended
+      new `formula-1.helvegpovlsen.dk` references plus pre-existing, unrelated personal-email
+      addresses (`f1_admin@helvegpovlsen.dk`, `thomas@helvegpovlsen.dk` in `nightly-report.js` /
+      `security-review.js` / `.env.example` / CI secrets) — none of which this epic touches.
+
+### Phase 8 — Write down the convention
+
+- [ ] 8.1 Draft the convention note covering both: (a) `<project>.helvegpovlsen.dk` is the standard
+      test-subdomain pattern for every future project, and (b) `hpovlsen.dk` the domain is **not**
+      decommissioned — it keeps its email role (gotcha #15); only its file-hosting role and old FTP
+      directory are retired. (REQ-906, REQ-907)
+- [ ] 8.2 **(open question — ask Djarnis)** Where should this note live for cross-project
+      visibility, since a brand-new project's own repo won't have this repo's `CLAUDE.md` or memory
+      in context? Candidates: a personal ops/notes location Djarnis keeps outside any single project
+      repo, or a line in whatever bootstrapping checklist/template he uses when starting a new
+      project. Do not silently pick one — this is explicitly flagged as undecided. (REQ-906)
+
+### Phase 9 — Old FTP directory cleanup (strictly last, destructive, gated)
+
+- [ ] 9.1 **(manual)** List `/hpovlsen.dk`'s full contents on the FTP server. Confirm the set matches
+      exactly what this repo's tooling put there: `public/`, `config.php`, `config.shared.php`, and
+      conditionally `bin/state/`. If anything else is present, **stop and ask Djarnis** before
+      deleting anything. (REQ-809.1)
+- [ ] 9.2 **(gate)** Get Djarnis's explicit approval specifically for deleting the deployed
+      `f1-intelligence/` client instance at `/hpovlsen.dk/public/f1-intelligence/` — separate from
+      the doc-edit approval in 7.3; deleting a live-adjacent deployed instance is a bigger action.
+      (REQ-809.2)
+- [ ] 9.3 **(gate)** Get Djarnis's explicit sign-off that every Phase 1–8 scenario has passed and
+      he's ready for irreversible cleanup.
+- [ ] 9.4 **(manual)** Delete `/hpovlsen.dk` via an FTP client or Simply.com's File Manager — a
+      one-off action, never scripted or run unattended. (REQ-809.4)
+- [ ] 9.5 Confirm the test database is unaffected (row counts/content unchanged) — this is a
+      filesystem-only action with no DB dependency. (REQ-809.3)
+
+### Rollback (only if a problem surfaces before Phase 9 runs)
+
+Revert `config.test.php` + `build-deploy/.env` to their pre-migration values, redeploy via
+`npm run deploy:test`, and flip `BASE_URL_TEST` back to `https://www.hpovlsen.dk` **in the same
+action** — reverting only the code/config side while CI still points at the new domain reproduces
+the exact failure NFR-802 exists to prevent, in reverse. This window closes permanently once Phase 9
+runs. (NFR-803)
+
 ## Out of Scope
 
 - Any change to `f1-intelligence/` or `public/f1-intelligence/` behavior. Per `CLAUDE.md`, that RAG

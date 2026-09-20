@@ -2,7 +2,7 @@
 
 **Location:** `f1-intelligence/` (Node.js/Vercel API) + `public/f1-intelligence/` (PHP client)
 
-**Status:** LIVE on Vercel, serving formula-1.dk and hpovlsen.dk. Do NOT modify without explicit user approval.
+**Status:** LIVE on Vercel, serving formula-1.dk and formula-1.helvegpovlsen.dk. Do NOT modify without explicit user approval.
 
 ---
 
@@ -50,7 +50,7 @@ f1betting/
 ## Deployment Workflow
 
 **Servers:**
-- Test: hpovlsen.dk (PHP)
+- Test: formula-1.helvegpovlsen.dk (PHP)
 - Live: formula-1.dk (PHP)
 - API: Vercel (Node.js)
 
@@ -59,8 +59,8 @@ f1betting/
 2. Deploy API: `vercel deploy --prod`
 3. Set Vercel env vars: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`
 4. Update `public/config.php` with Vercel URL
-5. Upload `public/f1-intelligence/` to hpovlsen.dk via FTP
-6. Test at `https://hpovlsen.dk/f1-intelligence/test.php`
+5. Upload `public/f1-intelligence/` to formula-1.helvegpovlsen.dk via FTP
+6. Test at `https://formula-1.helvegpovlsen.dk/f1-intelligence/test.php`
 7. Deploy to formula-1.dk when verified
 
 ---
@@ -71,7 +71,7 @@ In `public/config.php`:
 ```php
 define('F1_INTELLIGENCE_API_URL', 'https://your-app.vercel.app');
 define('F1_INTELLIGENCE_TIMEOUT', 30);
-define('F1_INTELLIGENCE_DEBUG', false); // true only on hpovlsen.dk
+define('F1_INTELLIGENCE_DEBUG', false); // true only on formula-1.helvegpovlsen.dk
 ```
 
 ---

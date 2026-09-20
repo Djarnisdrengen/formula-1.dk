@@ -260,8 +260,9 @@ FTP_HOST, FTP_USER, FTP_PASS, FTP_ROOT_TEST, FTP_ROOT_LIVE, DRY_RUN
    ```
 3. `config.php` on the server is the renamed `config.test.php` or `config.live.php`.
 4. CSP nonce is generated in `header.php` per request; inline scripts reference it.
-5. All POST handlers call `requireCsrf()` before processing.
-6. Output is escaped with `escape()` (wraps `htmlspecialchars`).
+5. `header.php` renders a conditional one-time nudge partial (`includes/passkey-nudge.php`) right after `<main>` opens — see [Self-Gating Single-Read Nudge](patterns.md#self-gating-single-read-nudge-passkey-nudgephp) in `docs/patterns.md`.
+6. All POST handlers call `requireCsrf()` before processing.
+7. Output is escaped with `escape()` (wraps `htmlspecialchars`).
 
 ---
 

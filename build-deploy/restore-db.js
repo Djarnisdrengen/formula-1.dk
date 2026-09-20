@@ -69,7 +69,7 @@ async function main() {
 
     const envLabel = env === "live"
         ? "⚠️  LIVE database (formula-1.dk)"
-        : "⚠️  TEST database (hpovlsen.dk)";
+        : "⚠️  TEST database (formula-1.helvegpovlsen.dk)";
     const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout });
     const confirmed = await new Promise(resolve =>
         rl2.question(`\nYou are about to overwrite the ${envLabel}. Type YES to confirm: `, answer => {

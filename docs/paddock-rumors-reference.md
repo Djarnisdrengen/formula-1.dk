@@ -14,7 +14,7 @@ Auto-updating F1 race knowledge, distilled from the paddock's analysis sources. 
 
 ## Relationship to f1-intelligence/
 
-- **`f1-intelligence/`** — existing live RAG (Vercel API + PHP client on hpovlsen.dk / formula-1.dk). Already working. Untouched by Paddock Rumors.
+- **`f1-intelligence/`** — existing live RAG (Vercel API + PHP client on formula-1.helvegpovlsen.dk / formula-1.dk). Already working. Untouched by Paddock Rumors.
 - **`paddock-rumors/`** — content-generation layer. Produces a richer, tagged knowledge base. Default mode: writes to `paddock-rumors/data/knowledge-base.json` (fully isolated). Integrated mode: writes directly to the live KB. See integration paths below.
 
 **IMPORTANT RULE:** Never modify anything inside `f1-intelligence/` or `public/f1-intelligence/` based on Paddock Rumors documentation unless the user explicitly approves a specific change. The `paddock-rumors/upgrades/` folder holds two files that *would* upgrade Phase 1, but applying them requires user sign-off.

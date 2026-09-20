@@ -90,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setLang($user['language']    ?? 'da');
             setTheme($user['theme']      ?? $anonTheme);
             setFont($user['font_stack']  ?? $anonFont);
+            // Read-once by includes/passkey-nudge.php, the first time header.php next renders.
+            // Reaching this branch already proves zero active factors incl. no passkey (line 62).
+            $_SESSION['passkey_nudge'] = true;
             header("Location: " . $redirect);
             exit;
         } else {
@@ -134,7 +137,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="hf-hero-eyebrow" style="margin-bottom:8px;"><?= t('welcome_back') ?></div>
                 <h2 style="font-family:var(--font-display);font-weight:900;font-size:28px;letter-spacing:-0.02em;margin:0 0 8px;"><?= t('login') ?></h2>
             </div>
-            <form method="POST" style="display:flex;flex-direction:column;gap:14px;">
+            <form method="POST" id="loginForm" style="display:flex;flex-direction:column;gap:14px;">
                 <?= csrfField() ?>
                 <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect) ?>">
                 <div>

@@ -7,7 +7,7 @@ This file is injected into Claude Code conversations. Keep it **small** — deta
 ## ⚠️ Project identity — read first
 
 **This repo is F1Betting / Paddock Picks** — `~/github/formula-1.dk`, GitHub `Djarnisdrengen/formula-1.dk`,
-domains **formula-1.dk** (live) and **hpovlsen.dk** (test).
+domains **formula-1.dk** (live) and **formula-1.helvegpovlsen.dk** (test).
 
 It has a **sibling project that is NOT this one**: Robinsonklubben (`~/github/robinsonklubben.dk`,
 domain robinsonklubben.dk) — a trip expense-sharing app. The two are structural near-twins (both
@@ -43,7 +43,7 @@ session (not the fresh-subagent-per-phase pattern):
 Formula 1 prediction game. Players pick top-3 podium finishers before each race. Points awarded per position, with bonus pool payouts for perfect predictions.
 
 **Two environments:**
-- **Test:** `hpovlsen.dk` — development/testing
+- **Test:** `formula-1.helvegpovlsen.dk` — development/testing
 - **Live:** `formula-1.dk` — production
 
 **Bilingual:** Danish (default) and English, stored per user in DB.

@@ -25,7 +25,7 @@ For a brand-new server setup see [Deploy from Scratch](deploy-from-scratch.md).
 
 | Environment | URL | Config file (local) | Config file (server) |
 |---|---|---|---|
-| Test | hpovlsen.dk | `config.test.php` | `config.php` |
+| Test | formula-1.helvegpovlsen.dk | `config.test.php` | `config.php` |
 | Live | formula-1.dk | `config.live.php` | `config.php` |
 
 ---

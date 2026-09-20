@@ -190,7 +190,7 @@ never the value.
 ### No live environment toggle
 
 Verified there is no shared filesystem, database, or API channel between the test
-(hpovlsen.dk) and live (formula-1.dk) hosts — separate config files, FTP-based one-way deploys
+(formula-1.helvegpovlsen.dk) and live (formula-1.dk) hosts — separate config files, FTP-based one-way deploys
 (`build-deploy/deploy.js`), one-way DB sync (`build-deploy/sync.js`). Building a cross-host write
 path would be new infrastructure risk disproportionate to a hobby-scale tool. Each deployed
 instance of Nøgler & Rotation manages only its own host's environment, implicitly (`APP_ENV`) — no

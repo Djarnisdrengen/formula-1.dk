@@ -27,6 +27,7 @@
 - [23. sync:live also wipes challenge_participants — there's no live copy to restore it from](#23-synclive-also-wipes-challenge_participants--theres-no-live-copy-to-restore-it-from)
 - [24. A hand-built POST to a bulk-delete/bulk-update handler needs `ids[]`, not repeated `ids`](#24-a-hand-built-post-to-a-bulk-deletebulk-update-handler-needs-ids-not-repeated-ids)
 - [25. Sessions are DB-backed, not PHP's default file sessions](#25-sessions-are-db-backed-not-phps-default-file-sessions)
+- [26. Conditional-mediation WebAuthn must stay scoped to login.php, and e2e specs must stub it off](#26-conditional-mediation-webauthn-must-stay-scoped-to-loginphp-and-e2e-specs-must-stub-it-off)
 
 ---
 
@@ -207,17 +208,17 @@ Migrations (`database/*.sql` and inline `ALTER`s in `schema.sql`) are applied by
 
 ## 19. The test-environment banner is gated by `APP_ENV` — never loosen the guard
 
-`public/includes/header.php` renders a yellow "Dette er en testhjemmeside" banner only when `APP_ENV === 'test'`. The banner is only ever allowed on hpovlsen.dk — never formula-1.dk (owner decision, 2026-07-05). The guard is server-side config, deliberately **not** `$_SERVER['HTTP_HOST']` (client-controlled). Don't remove the guard, don't switch it to Host-header sniffing, and don't raise the banner's `z-index` above the nav drawer's 30. The `deploy:live` E2E gate (`tests/e2e/01-smoke.spec.js`) asserts the banner is absent on live and rolls back the deploy if it isn't. Full spec: `epics/design_handoff_test_banner/`.
+`public/includes/header.php` renders a yellow "Dette er en testhjemmeside" banner only when `APP_ENV === 'test'`. The banner is only ever allowed on formula-1.helvegpovlsen.dk — never formula-1.dk (owner decision, 2026-07-05). The guard is server-side config, deliberately **not** `$_SERVER['HTTP_HOST']` (client-controlled). Don't remove the guard, don't switch it to Host-header sniffing, and don't raise the banner's `z-index` above the nav drawer's 30. The `deploy:live` E2E gate (`tests/e2e/01-smoke.spec.js`) asserts the banner is absent on live and rolls back the deploy if it isn't. Full spec: `epics/design_handoff_test_banner/`.
 
 ---
 
 ## 20. Passkeys are bound to `PASSKEY_RPID` — a one-way door per environment
 
-Every passkey is cryptographically bound to the WebAuthn relying-party id: the **registrable domain**, `hpovlsen.dk` (test) / `formula-1.dk` (live), set as `PASSKEY_RPID` in each config. **Changing it after members have registered orphans every passkey silently** — logins just stop working. That's why `passkeyRpId()` (`public/includes/passkey.php`) fails loud unless the constant is present *and* matches the domain derived from `SITE_URL`: a config edit that changes the domain becomes an immediate error, not silent orphaning.
+Every passkey is cryptographically bound to the WebAuthn relying-party id: the **registrable domain**, `formula-1.helvegpovlsen.dk` (test) / `formula-1.dk` (live), set as `PASSKEY_RPID` in each config. **Changing it after members have registered orphans every passkey silently** — logins just stop working. That's why `passkeyRpId()` (`public/includes/passkey.php`) fails loud unless the constant is present *and* matches the domain derived from `SITE_URL`: a config edit that changes the domain becomes an immediate error, not silent orphaning.
 
 Consequences to keep in mind:
 
-- **Test and live credentials are not interchangeable** — a passkey registered on hpovlsen.dk can never sign in on formula-1.dk, and vice versa.
+- **Test and live credentials are not interchangeable** — a passkey registered on formula-1.helvegpovlsen.dk can never sign in on formula-1.dk, and vice versa.
 - **`sync:live` clears `user_passkeys` on the test copy** (`sync-from-live.php`, verified fail-loud by `sync.js`). Live rows would be unusable on test *and* would gate those members' test logins behind a factor that cannot be satisfied — `passkeyActive()` feeds `userHasActiveFactor()`, which triggers the two-step login.
 - **Registration and challenge verification must always ship together.** A member's *first* `user_passkeys` row immediately gates their password login, so a deploy that carries registration without the `mfa_challenge.php` passkey block + `webauthn.php` verify actions locks that member down to recovery codes.
 - **Sign counts are advisory.** Most platform authenticators always report 0; the clone check in `passkeyAssertVerify()` only rejects when both stored and new counters are non-zero. Don't "harden" it into a lockout — you'd lock out every iCloud/Google-synced passkey.
@@ -280,3 +281,14 @@ Consequences to know about:
 - Cleanup is **not** PHP's per-request probabilistic `session.gc` (unreliable by design, and part of what got us here) — it's the dedicated `public/cron/session_gc.php` cron (hourly, `.github/workflows/cron-session-gc.yml`), which deletes rows past `SESSION_ABSOLUTE_TIMEOUT`.
 - `sessions` is a normal migration-gated table (`database/add_sessions.sql`, registered in `database/migrations.json`) — forgetting to run it on an environment fails loud via the deploy schema check (gotcha #18), not silently.
 - `public/paddock-rumors/query.php` used to call a bare `session_start()` of its own before `config.php` was even required — that started a session under PHP's *default* file handler before `DbSessionHandler` got registered, silently defeating this fix for that one endpoint (and was already logging harmless-but-noisy "session already active" warnings). Removed; that page now gets its session from `config.php`'s chain like every other page. If you add a new entry point, don't call `session_start()` yourself — `require config.php` and let `config.shared.php` do it.
+
+## 26. Conditional-mediation WebAuthn must stay scoped to `login.php`, and e2e specs must stub it off
+
+`public/assets/js/passkey.js`'s `loginConditional()` fires `navigator.credentials.get({mediation:'conditional'})` unconditionally on `init()`, gated only by the `[data-passkey-login]` DOM marker — which currently renders only on `login.php`. Never remove that guard or call `loginConditional()` from a page-specific script on `profile.php` or `mfa_challenge.php`: `passkey.js` is loaded on both, and an anonymous discoverable-credential login attempt firing on `mfa_challenge.php` in particular would race an unrelated passwordless login against a two-step challenge already mid-flight in `$_SESSION['mfa_pending']`.
+
+Two independent e2e traps follow from the same feature:
+
+- Chromium's CDP virtual authenticator (`WebAuthn.addVirtualAuthenticator`) does not enforce the spec's real-user-gesture requirement before resolving a conditional `get()`. With `automaticPresenceSimulation: true`, any pending conditional request auto-resolves the instant a matching resident credential exists — no simulated tap, no real interaction — which will race ahead of a test's own explicit button-click or password-submit steps and complete the login first, mid-test.
+- Plain headless Chromium reports `isConditionalMediationAvailable()` as `true` even with **no** virtual authenticator attached at all — enough on its own to fire a background `login_options` call and plant a fresh session challenge in a test that assumed none would exist.
+
+Fix: every spec that navigates to `/login.php` stubs the capability check off via `disableConditionalMediation(page)` (`tests/helpers/webauthn.js`), called before any `page.goto()`. `tests/e2e/auth/35-passkey.spec.js` and `36-passkey-negative.spec.js` both do this in `beforeEach`; the handful of tests written specifically to exercise the conditional path (`CU-01`/`CU-02`/`CU-04` in `35-passkey.spec.js`) re-enable it deliberately, per-test, after the blanket stub already ran.

@@ -1,6 +1,7 @@
 'use strict';
 const { test, expect } = require('@playwright/test');
 const seed = require('../../helpers/seed');
+const { disableConditionalMediation } = require('../../helpers/webauthn');
 
 // Bypass and enumeration-parity negatives for webauthn.php. No virtual
 // authenticator needed — every case must FAIL before crypto matters. POSTs go
@@ -35,6 +36,10 @@ test.describe('Passkey (WebAuthn) negatives', { tag: '@auth' }, () => {
     test.use({ storageState: { cookies: [], origins: [] } });
 
     test.beforeAll(async () => { await seed.authUser(); });
+    // Plain headless Chromium reports isConditionalMediationAvailable() true with no virtual
+    // authenticator attached at all — enough on its own to plant a session challenge ahead of
+    // this file's own explicit login_options calls (e.g. PWL-03) without this stub.
+    test.beforeEach(async ({ page }) => { await disableConditionalMediation(page); });
     test.afterAll(async () => {
         await seed.cleanup.authUser();
         // The garbage login_verify posts above each record a failed attempt.

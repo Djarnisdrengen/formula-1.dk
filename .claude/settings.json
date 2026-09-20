@@ -36,7 +36,7 @@
       "Bash(vercel env *)",
       "Bash(curl -sv https://api-d053fsoqr-thomas-helveg-povlsen-s-projects.vercel.app/api/intelligence)",
       "Bash(curl -sv https://www.formula-1.dk/f1-intelligence/test.php)",
-      "Bash(curl -sv https://www.hpovlsen.dk/f1-intelligence/query.php)",
+      "Bash(curl -sv https://www.formula-1.helvegpovlsen.dk/f1-intelligence/query.php)",
       "Bash(admin\\\\|Challenges tab\\\\|admin)",
       "Bash(\" feature.md | head -30)",
       "Bash(grep -n \"D8\\\\|REQ-006\\\\|REQ-108\\\\|⚠\\\\|admin tab\\\\|challenges` admin\\\\|Challenges tab\\\\|admin `challenges`\" feature.md | head -30)",

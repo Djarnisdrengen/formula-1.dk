@@ -6,7 +6,7 @@
 
 | Command | What it does |
 |---|---|
-| `npm run deploy:test` | Uploads all files from `public/` to **hpovlsen.dk** via FTP, respecting `.deployignore`. After upload, runs HTTP smoke tests. Test-only files (`test-seed.php`, `sync-from-live.php`) **are** uploaded here — they live only on the test server. |
+| `npm run deploy:test` | Uploads all files from `public/` to FTP path `/test.formula-1.dk` (serves **formula-1.helvegpovlsen.dk** — the FTP folder name and the domain are deliberately different strings, unlike live where both are `formula-1.dk`), respecting `.deployignore`. After upload, runs HTTP smoke tests. Test-only files (`test-seed.php`, `sync-from-live.php`) **are** uploaded here — they live only on the test server. |
 | `npm run deploy:live` | Uploads all files from `public/` to **formula-1.dk** via FTP. Requires typing `YES` at the confirmation prompt. Before uploading, creates a timestamped backup of the current live site. After upload, runs smoke tests + Playwright E2E tests. If either fails, automatically rolls back to the backup. Test-only files are excluded via `.deployignore.live`. |
 | `npm run setup:deploy` | One-time interactive setup that writes FTP credentials into `build-deploy/.env`. Run this when setting up the project on a new machine. |
 
@@ -23,7 +23,7 @@ Deploys run this check automatically after upload (see [Schema check](#schema-ch
 
 | Command | What it does |
 |---|---|
-| `npm run sync:live` | Copies all data from the live database (formula-1.dk) into the test database (hpovlsen.dk), overwriting everything except the `settings` table. Drops any `old_` prefixed legacy tables. Useful for testing against real data. Requires `LIVE_DB_NAME` to be defined in the test server's `config.php`. |
+| `npm run sync:live` | Copies all data from the live database (formula-1.dk) into the test database (formula-1.helvegpovlsen.dk), overwriting everything except the `settings` table. Drops any `old_` prefixed legacy tables. Useful for testing against real data. Requires `LIVE_DB_NAME` to be defined in the test server's `config.php`. |
 | `npm run restore:db` | Lists all available DB backups (from `build-deploy/backups/live/`). Run with a timestamp and target to restore: `npm run restore:db -- <timestamp> [test\|live]`. Reads `db-backup.json` from the chosen backup folder and re-imports all tables into the target database. Restoring to **live** has a 5-second abort window before it proceeds. `db-restore.php` must be present on the target server — it is deployed to test automatically but **excluded from live** by default (remove it from `.deployignore.live` temporarily if you need a live restore). |
 
 ### Backup & Rollback
@@ -40,13 +40,13 @@ Deploys run this check automatically after upload (see [Schema check](#schema-ch
 | `npm run test:smoke` | Fires HTTP requests against the deployed site and checks that key pages return 200. Fast, no browser. Runs automatically as part of every deploy. Target URL is read from `config.test.php` or `config.live.php`. |
 | `npm run test:e2e` | Runs the Playwright E2E browser tests (`smoke.spec.js`) against whichever `DEPLOY_ENV` is set. URL and credentials are read automatically from the matching `config.*.php` file. Used internally by `deploy:live`. |
 | `npm run test:e2e:live` | Manually runs E2E tests against **formula-1.dk**. URL and credentials are read from `config.live.php`. |
-| `npm run test:e2e:test` | Manually runs E2E tests against **hpovlsen.dk**. URL and credentials are read from `config.test.php`. |
-| `npm run test:integration` | Runs the Playwright integration test suite against **hpovlsen.dk** only. Before asserting, calls `test-seed.php` to reset the test database and seed 5 races of deterministic data (3 users, 10 drivers, 15 bets). Asserts correct points totals, leaderboard order, star counts, and betting pool sizes. **Never run this against the live site — it seeds fake data.** Run manually after deploying to test. |
+| `npm run test:e2e:test` | Manually runs E2E tests against **formula-1.helvegpovlsen.dk**. URL and credentials are read from `config.test.php`. |
+| `npm run test:integration` | Runs the Playwright integration test suite against **formula-1.helvegpovlsen.dk** only. Before asserting, calls `test-seed.php` to reset the test database and seed 5 races of deterministic data (3 users, 10 drivers, 15 bets). Asserts correct points totals, leaderboard order, star counts, and betting pool sizes. **Never run this against the live site — it seeds fake data.** Run manually after deploying to test. |
 | `npm run test:all` | Runs `test:smoke` then `test:e2e`. Equivalent to what `deploy:live` runs automatically after upload. |
 
 ### Security
 
-Runs OWASP-mapped security checks against the deployed site. By default targets **hpovlsen.dk** (test); use the `:live` variants for **formula-1.dk**.
+Runs OWASP-mapped security checks against the deployed site. By default targets **formula-1.helvegpovlsen.dk** (test); use the `:live` variants for **formula-1.dk**.
 
 | Command | What it does |
 |---|---|
@@ -68,7 +68,7 @@ Reports are saved to `build-deploy/security-reports/` as `.md` and `.json` (two 
 | Environment | Site | Branch |
 |-------------|------|--------|
 | Local dev   | Direct file editing | `main` |
-| Test        | hpovlsen.dk | `main` |
+| Test        | formula-1.helvegpovlsen.dk | `main` |
 | Live        | formula-1.dk | `main` (only after test verified) |
 
 ---
@@ -101,7 +101,7 @@ git push
 ```bash
 node build-deploy/deploy.js test
 ```
-Verify everything works on **hpovlsen.dk**.
+Verify everything works on **formula-1.helvegpovlsen.dk**.
 
 ### 4. Deploy to live — only when test is confirmed working
 ```bash
@@ -178,5 +178,5 @@ Go to **Settings → Secrets and variables → Actions**:
 ## Summary
 
 ```
-edit code → git commit → deploy test → verify on hpovlsen.dk → deploy live
+edit code → git commit → deploy test → verify on formula-1.helvegpovlsen.dk → deploy live
 ```

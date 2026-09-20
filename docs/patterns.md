@@ -8,6 +8,7 @@
 - [Token Comparison (constant-time)](#token-comparison-constant-time)
 - [Auth Guards](#auth-guards)
 - [Reusable Include Pattern (qualifying-display.php)](#reusable-include-pattern-qualifying-displayphp)
+- [Self-Gating Single-Read Nudge (passkey-nudge.php)](#self-gating-single-read-nudge-passkey-nudgephp)
 - [Config Constants](#config-constants)
 - [php-config.js Bridge](#php-configjs-bridge)
 - [Translation](#translation)
@@ -143,6 +144,35 @@ include __DIR__ . '/includes/qualifying-display.php';
 The include reads `$_qd_data[$_qd_keys[0..2]]`, renders the P1/P2/P3 badges, then `unset()`s all `$_qd_*` variables to keep the scope clean for the next caller.
 
 Use this pattern when the same visual block appears in more than two templates.
+
+---
+
+## Self-Gating Single-Read Nudge (passkey-nudge.php)
+
+For a one-time post-action nudge (shown once, then never again regardless of whether it was
+dismissed), a page sets a session flag right before its redirect; a `require_once`d partial
+consumes it on the very next render and `unset()`s it immediately — so a reload, a dismiss
+click, or navigating away all leave it gone for good, with no separate "seen" column and no
+"ask me later" state to track.
+
+```php
+// Setter (e.g. login.php, right before its own redirect):
+$_SESSION['passkey_nudge'] = true;
+header("Location: " . $redirect);
+exit;
+
+// Partial (public/includes/passkey-nudge.php), required from header.php right after <main>:
+$showPasskeyNudge = $currentUser && !empty($_SESSION['passkey_nudge']);
+unset($_SESSION['passkey_nudge']);
+if ($showPasskeyNudge): ?>
+    <!-- markup -->
+<?php endif; ?>
+```
+
+Dismiss (if offered) is a pure client-side `.remove()` on the rendered markup — no server
+round-trip needed, since the flag was already consumed server-side on this same render. Use
+this pattern for any future one-time post-action nudge; reach for a real DB-backed "seen" flag
+only if the nudge must survive across sessions rather than being read exactly once.
 
 ---
 

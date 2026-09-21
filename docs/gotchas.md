@@ -16,7 +16,7 @@
 - [12. in_competition = 0 for the admin user](#12-in_competition--0-for-the-admin-user)
 - [13. quali_p1/p2/p3 must match exact bet validation](#13-quali_p1p2p3-must-match-exact-bet-validation)
 - [14. Nightly report emails appear twice when SMTP_FROM and REPORT_TO share the same Proton account](#14-nightly-report-emails-appear-twice-when-smtp_from-and-report_to-share-the-same-proton-account)
-- [15. sync:live rewrites all user emails to @hpovlsen.dk](#15-synclive-rewrites-all-user-emails-to-hpovlsendk)
+- [15. sync:live rewrites all user emails to +test@formula-1.dk](#15-synclive-rewrites-all-user-emails-to-testformula-1dk)
 - [16. MFA requires MFA_KEY in config, and MFA tables use the legacy latin1 collation](#16-mfa-requires-mfa_key-in-config-and-mfa-tables-use-the-legacy-latin1-collation)
 - [17. Test env sends email by default — interception is opt-in](#17-test-env-sends-email-by-default--interception-is-opt-in-e2e-turns-it-on-per-run)
 - [18. Migrations are manual per environment — the deploy schema check catches forgotten ones](#18-migrations-are-manual-per-environment--the-deploy-schema-check-catches-forgotten-ones)
@@ -149,7 +149,7 @@ The admin UI's qualifying fields use the same driver dropdowns as the bet form, 
 
 ## 14. Nightly report emails appear twice when `SMTP_FROM` and `REPORT_TO` share the same Proton account
 
-`SMTP_FROM` is `info@formula-1.dk` and `REPORT_TO` is `f1_admin@helvegpovlsen.dk` — both resolve to addresses on the same Proton Mail account. Proton treats this as a self-send and creates two copies: one stored as a sent item under `info@formula-1.dk` and one delivered to `thomas@helvegpovlsen.dk`. Any Proton filter that matches on subject will catch both copies and move them to the same folder, making it look like the email was sent twice.
+On **live**, `SMTP_FROM` is `info@formula-1.dk` and `REPORT_TO` is `f1_admin@helvegpovlsen.dk` — both resolve to addresses on the same Proton Mail account. Proton treats this as a self-send and creates two copies: one stored as a sent item under `info@formula-1.dk` and one delivered to `thomas@helvegpovlsen.dk`. Any Proton filter that matches on subject will catch both copies and move them to the same folder, making it look like the email was sent twice. On **test**, `SMTP_FROM` is also `info@formula-1.dk`, and since 2026-09-21 `REPORT_TO`/`F1_ADMIN_EMAIL` is `f1_admin@formula-1.dk` (moved off `helvegpovlsen.dk`, see gotcha #15) — same domain, so the same dedup behavior now applies there too, likely for every test email test-seed.php's `send_email_preview` sends, not just the nightly report.
 
 There is no incoming-only condition available in Proton's simple filter builder, so the duplicate cannot be eliminated by a filter alone. The fix is to either change `SMTP_FROM` to an address outside this Proton account, or change `REPORT_TO` to an external address (e.g. Gmail).
 
@@ -157,15 +157,40 @@ There is no incoming-only condition available in Proton's simple filter builder,
 
 ---
 
-## 15. `sync:live` rewrites all user emails to `@hpovlsen.dk`
+## 15. `sync:live` rewrites all user emails to `+test@formula-1.dk`
 
-When `npm run sync:live` copies the live database into test, every user email whose domain is not already `hpovlsen.dk` has its domain rewritten, local-part preserved: `thomas@helvegpovlsen.dk` becomes `thomas@hpovlsen.dk`, `user@gmail.com` becomes `user@hpovlsen.dk`, and so on. `hpovlsen.dk` is a domain Djarnis owns with catch-all alias forwarding enabled, so every synced user's mail lands in the same real inbox regardless of their original local-part — this is deliberate: it lets MFA challenges (email OTP) and other email content be verified by hand for accounts copied from production, without digging through the SMTP intercept log. It also means no rewritten address can ever collide with an actual third-party player's real inbox.
+When `npm run sync:live` copies the live database into test, every user email is rewritten to
+`<original-local-part>+test@formula-1.dk` (any existing `+tag` already in the local part is
+stripped first, so the result is always exactly one `+test` tag): `thomas@helvegpovlsen.dk`
+becomes `thomas+test@formula-1.dk`, `user@gmail.com` becomes `user+test@formula-1.dk`, and so on.
+`formula-1.dk` — the app's own live domain — has catch-all forwarding enabled, so any `+`-tagged
+local part lands in a real inbox without provisioning anything: this is deliberate, and lets MFA
+challenges (email OTP) and other email content be verified by hand for accounts copied from
+production, without digging through the SMTP intercept log. It also means no rewritten address can
+ever collide with an actual third-party player's real inbox.
 
-The admin account (`F1_ADMIN_EMAIL`, currently `f1_admin@helvegpovlsen.dk`) is preserved unchanged — it is saved before the sync wipe and restored afterward.
+**Moved off `hpovlsen.dk` 2026-09-21** (previously: domain-swap only, local-part preserved
+verbatim, e.g. `thomas@helvegpovlsen.dk` → `thomas@hpovlsen.dk`). See the *Test site domain
+migration* epic's Phase 9b for the full decision: Simply.com doesn't support email addresses on a
+subdomain, which ruled out moving this to `helvegpovlsen.dk`; `formula-1.dk`'s existing catch-all
+was chosen instead, using `+`-addressing so no new mailbox has to be provisioned per user/fixture.
+`hpovlsen.dk` keeps its personal catch-all role unchanged — this only means *new* test-data mail
+stops being routed there.
+
+The admin account (`F1_ADMIN_EMAIL`, `f1_admin@formula-1.dk` on test as of 2026-09-21, previously
+`f1_admin@helvegpovlsen.dk`) is preserved unchanged across a sync — it is saved before the wipe and
+restored afterward, independent of the per-row rewrite above.
 
 Unless SMTP intercept is on, emails to synced users **are sent for real** (captured only if you flip **Admin → Settings → Email delivery** to capture, or `touch /tmp/f1betting_smtp_intercept`). See [testing.md](testing.md). This is intentional for manual testing — but be aware that triggering a bulk action (e.g. running the notification cron) against a large synced user set will fire that many real emails at once into the same inbox.
 
-Automated E2E fixture addresses (`e2e_*_f1@hpovlsen.dk`, seeded by `test-seed.php`) also use `@hpovlsen.dk`, so during automated runs (`SMTP_INTERCEPT=true`) they're captured to the JSONL log exactly like before — interception doesn't check domain — but if intercept is ever off, fixture mail now lands in the same real catch-all inbox as synced accounts instead of failing to deliver. Because fixtures and synced accounts now share a domain, `test-seed.php`'s destructive actions (`cleanup_passkeys`, `set_passkey_sign_count`) can no longer rely on the domain alone to avoid touching a synced or manually created account — they additionally require the email's local-part to start with `e2e_`, which only seeded fixtures use.
+Automated E2E fixture addresses (`e2e_*_f1+test@formula-1.dk`, seeded by `test-seed.php`) also use
+`+test@formula-1.dk`, so during automated runs (`SMTP_INTERCEPT=true`) they're captured to the
+JSONL log exactly like before — interception doesn't check domain — but if intercept is ever off,
+fixture mail now lands in the same real catch-all inbox as synced accounts instead of failing to
+deliver. Because fixtures and synced accounts share the same domain/suffix, `test-seed.php`'s
+destructive actions (`cleanup_passkeys`, `set_passkey_sign_count`) can no longer rely on the
+domain alone to avoid touching a synced or manually created account — they additionally require
+the email's local-part to start with `e2e_`, which only seeded fixtures use.
 
 
 ---

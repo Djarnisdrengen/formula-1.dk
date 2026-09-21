@@ -200,7 +200,7 @@ Note: Simply.com's WAF blocks curl when a long token appears in the query string
 | 3b. Restore schema | phpMyAdmin → SQL → paste `database/schema.sql` | 9 tables visible in structure tab |
 | 4. Restore data | `npm run restore:db -- --env test` → select pre-drill snapshot, type YES | `✅ Restore complete` |
 | 5. E2E tests | `npm run test:e2e:test` | All pass |
-| 6. Admin login | Browser: log in as `f1_admin@helvegpovlsen.dk` | Admin panel loads |
+| 6. Admin login | Browser: log in as `f1_admin@formula-1.dk` | Admin panel loads |
 | 7. Cron endpoints | Node.js fetch to `?token=<CRON_SECRET>` (not `?secret=`) | qualifying: `Cron token validation: VALID`; notifications: `Notification check complete.` |
 | 8. Sync back | `npm run sync:live` | Restores test DB to match live |
 

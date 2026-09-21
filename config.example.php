@@ -8,6 +8,9 @@ define('APP_ENV', 'test');                          // 'test' | 'live'
 
 // ── ADMIN USER ──────────────────────────────────────────────────────────────
 // Always preserved — not in competition, but needed for admin tasks and testing.
+// Test and live are allowed to diverge here (as of 2026-09-21, test uses
+// f1_admin@formula-1.dk; live still uses f1_admin@helvegpovlsen.dk) — set whichever
+// value is correct for the environment this file becomes.
 define('F1_ADMIN_EMAIL',    'f1_admin@helvegpovlsen.dk');
 define('F1_ADMIN_PASSWORD', 'change-me-32-randomhex-chars');
 

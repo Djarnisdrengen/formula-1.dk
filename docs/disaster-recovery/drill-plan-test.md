@@ -86,7 +86,7 @@ fetch(cfg.siteUrl + '/tools/db-backup.php', { headers: { Authorization: 'Bearer 
 **Record the counts** — compare against these in step 4.5.
 
 ### Step 1.3 — Verify admin login
-Open `https://www.formula-1.helvegpovlsen.dk`, log in as `f1_admin@helvegpovlsen.dk`.
+Open `https://www.formula-1.helvegpovlsen.dk`, log in as `f1_admin@formula-1.dk`.
 **Expected:** Admin panel loads with all tabs.
 
 ---

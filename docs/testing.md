@@ -675,7 +675,9 @@ Test env only. Serial (25s timeout). Fresh user re-seeded `beforeEach`. Covers t
 npm run test:email:preview
 ```
 
-Standalone Stack B script. Calls `test-seed.php?action=send_email_preview` which renders all 10 email types in DA + EN (20 total) via the SMTP intercept. Prints a formatted summary (name, to, subject, extra fields) and writes HTML files to `tests/email-previews/{timestamp}/`. Not pass/fail — exit 0 always. Use it for manual visual review of email templates after copy or layout changes.
+Standalone Stack B script. Calls `test-seed.php?action=send_email_preview` which renders all 17 email types in DA + EN (34 total). Prints a formatted summary (name, to, subject, extra fields) and writes HTML files to `tests/email-previews/{timestamp}/`. Not pass/fail — exit 0 always. Use it for manual visual review of email templates after copy or layout changes.
+
+The action always sends via `sendEmail()`, so whether these are captured or actually delivered depends on `SMTP_INTERCEPT`'s flag file state at call time (see gotcha #17) — not on this script. The response JSON always includes each email's rendered HTML regardless, so the preview files get written either way; check `test-seed.php?action=get_test_emails` (0 entries = nothing was intercepted, i.e. these were real sends) if you need to know which mode was active for a given run.
 
 Open the generated HTML files in a browser to inspect the rendered emails:
 

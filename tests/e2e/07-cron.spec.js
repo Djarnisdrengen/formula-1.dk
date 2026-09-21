@@ -219,7 +219,7 @@ test.describe("Cron jobs", { tag: "@cron" }, () => {
         });
 
         test('betting-open email captured by intercept for in-competition inbox', async ({ page }) => {
-            const inbox = 'e2e_notify_open_in_f1@hpovlsen.dk';
+            const inbox = 'e2e_notify_open_in_f1+test@formula-1.dk';
             const baseline = new Set(
                 (await getMessages(inbox)).map(m => m._id)
             );
@@ -248,7 +248,7 @@ test.describe("Cron jobs", { tag: "@cron" }, () => {
         });
 
         test('betting-close email captured by intercept for unbetted inbox', async ({ page }) => {
-            const inbox = 'e2e_notify_close_a_f1@hpovlsen.dk';
+            const inbox = 'e2e_notify_close_a_f1+test@formula-1.dk';
             const baseline = new Set(
                 (await getMessages(inbox)).map(m => m._id)
             );

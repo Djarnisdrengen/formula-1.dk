@@ -427,7 +427,7 @@ before proceeding, per CLAUDE.md's f1-intelligence rule or this epic's own destr
       without rewriting it. Not a bootstrapping-template line — that option was offered but not
       chosen. (REQ-906)
 
-### Phase 9 — Email deliverability verification & sending-domain review (added 2026-09-20; moved ahead of the FTP cleanup phase on 2026-09-21)
+### Phase 9 — Email deliverability verification & sending-domain review (added 2026-09-20; moved ahead of the FTP cleanup phase on 2026-09-21) — ✅ done 2026-09-21
 
 Added after Phase 6 (Security heuristic check) surfaced that SPF/DKIM/DMARC records for the test
 domain resolve on the registrable **parent** (`helvegpovlsen.dk`), not on
@@ -440,62 +440,245 @@ destructive and permanently closes the rollback window, so email deliverability 
 exists to (a) prove email delivery actually works end-to-end on the new test domain — not just
 that the app reports no error — and (b) evaluate, not assume, whether `helvegpovlsen.dk` should
 become the test environment's sending domain. Scoped to **test only**; see the amended Out of
-Scope note below for why this doesn't reopen `hpovlsen.dk`'s DNS/MX.
+Scope note below for why this doesn't reopen `hpovlsen.dk`'s DNS/MX. **Outcome (see 9.6):** the
+eventual decision kept the sending domain unchanged and solved a different, related problem
+instead (where test-data addresses land) — the question below was worth asking, but the answer
+wasn't the one the framing here assumed.
 
-#### 9a — Baseline: verify current behavior first, before changing anything
+#### 9a — Baseline: verify current behavior first, before changing anything — ✅ done 2026-09-21
 
-- [ ] 9.1 Inventory every email-sending code path in the app, with file + trigger condition for
+- [x] 9.1 Inventory every email-sending code path in the app, with file + trigger condition for
       each: registration confirmation, password reset, MFA email OTP (`public/includes/mfa.php`),
       challenge invites (`public/challenges-invite.php`, `public/challenges-join.php`),
       admin-triggered notifications (`public/admin.php`, `public/admin-challenges.php`), the
       notifications cron (`public/cron/notifications.php`), and the CI nightly report /
-      `npm run test:resend`. This checklist is what 9.2 actually tests against, not vibes.
-- [ ] 9.2 With `SMTP_INTERCEPT` off (send-for-real is the test-env default per gotcha #17), trigger
+      `npm run test:resend`. This checklist is what 9.2 actually tests against, not vibes. — done
+      2026-09-21. **Correction to this item's own premise:** there is no "registration confirmation"
+      email — `register.php` sends nothing on signup; that path doesn't exist in the code. Full
+      inventory found via `sendEmail()`/wrapper call sites (`grep` across `public/`):
+      - Password reset (user-initiated) — `forgot_password.php` → `sendPasswordResetEmail()`.
+      - Admin-triggered password reset — `admin.php:297` (`sendEmail`, inline template).
+      - MFA reset notice — `admin.php:355`.
+      - Bet-deleted notice (admin-triggered) — `admin.php:414`.
+      - Invite (new + resend) — `admin.php:470,513` → `sendInviteEmail()`.
+      - Bet confirmation (placed + updated) — `bet.php`, `edit_bet.php` → `sendBetConfirmationEmail()`,
+        unconditional best-effort send on every successful bet write.
+      - MFA email OTP (enroll + login) — `includes/mfa.php`'s `issueEmailOtp()`.
+      - Challenge: owner email-confirm magic link — `challenges-invite.php` (own email path).
+      - Challenge: friend invite — `challenges-invite.php` (friend-send path, gated by
+        `canSendInvite()` — suppression/dedupe/rate-limit/daily-cap).
+      - Challenge: join magic link — `challenges-join.php`.
+      - Challenge: participant promoted to core account — `admin-challenges.php` (permanent-promotion
+        branch).
+      - Challenge: set-password invite (non-permanent promotion) — `admin-challenges.php` (else
+        branch).
+      - Duel result (win/lose/tie) — `includes/challenges.php:787`.
+      - Notifications cron (3 templates): pool reminder (non-competing + pending-invite variants),
+        betting-window-open, betting-closing-soon — `cron/notifications.php`.
+      - CI nightly Resend health check — `build-deploy/verify-resend.js` (`npm run test:resend`),
+        separate provider/transport from all of the above (Resend API, not Proton SMTP).
+      - `public/tools/test-seed.php`'s `send_email_preview` action (`test`-env only, token-gated)
+        already exercises 10 of the above templates × 2 languages with dummy data, no DB
+        side-effects, all sent to `F1_ADMIN_EMAIL` — the natural tool for 9.2.
+- [x] 9.2 With `SMTP_INTERCEPT` off (send-for-real is the test-env default per gotcha #17), trigger
       each path against `https://www.formula-1.helvegpovlsen.dk` and confirm **actual delivery** to
       a real inbox — check the Proton "Sent" folder and the destination inbox for each, not just
       that the app returned success. A soft bounce or silent drop looks identical to a successful
-      send from the application's point of view.
-- [ ] 9.3 Separately verify the Resend fallback transport (`npm run test:resend`) against test's
+      send from the application's point of view. — done 2026-09-21. Djarnis chose "extend the
+      preview tool" (over real-flow triggering or accepting partial coverage) to close 9.1's full
+      inventory: added 7 more templates (MFA OTP, both challenge-invite paths, challenge-join magic
+      link, both admin-challenges promotion emails, duel result — "won" variant) to
+      `test-seed.php`'s `send_email_preview` action, each reproducing the real call site's template
+      with dummy data and **no DB writes** (fake tokens never inserted into
+      `challenge_magic_links`/`password_resets`; `canSendInvite()`/`createChallengeInvite()`'s
+      dedupe/rate-limit/suppression logic intentionally bypassed since this is a template/transport
+      check, not a business-logic test) — deployed via `npm run deploy:test` (8/8 smoke passed).
+      Ran `node tests/email-preview.js` twice (once pre-extension, once post): **34/34 sends
+      reported `success`** across all 17 templates × da/en, all to `f1_admin@helvegpovlsen.dk`.
+      Confirmed real (non-intercepted) delivery both times via `action=get_test_emails`: **0 entries**
+      in the server's intercept JSONL each time (a nonzero count would mean `SMTP_INTERCEPT`'s flag
+      file was set and these never left the server) — this is the full inventory from 9.1, no gaps.
+      **Confirmed by Djarnis 2026-09-21:** all 34 preview emails were visually confirmed delivered
+      to `f1_admin@helvegpovlsen.dk`'s actual Proton inbox — closes the one gap this session
+      couldn't verify itself (no email-inbox access). 9.2 is fully done, no caveats remaining.
+      **Unrelated finding surfaced along the way (not fixed here, out of scope for this phase):**
+      `public/lang/email.php` has two full `// Duel result email` blocks under both `da` and `en`
+      (~line 58 and ~line 133 for da; ~195 and ~268 for en) — the same class of duplicate-`t()`-key
+      bug found previously in `email.php` and left unfixed in ~9 places in `user.php`, this time a
+      second instance in `email.php` itself. The later block silently wins, so the **live**
+      duel-result email subject is
+      literally `"Duel complete: %s"` / `"Duellen er afsluttet: %s"` with the `%s` never
+      substituted (`includes/challenges.php:787` passes the subject straight to `sendEmail()` with
+      no `sprintf()`), and the body's win/lost/tie text uses a hardcoded "+15/+5/+10 CP" that ignores
+      the actual `own_score`/`opp_score` arguments the code passes in. Pre-existing production bug,
+      unrelated to the domain migration — flagging for Djarnis to decide whether/when to fix.
+- [x] 9.3 Separately verify the Resend fallback transport (`npm run test:resend`) against test's
       current config values — a different code path/provider than primary SMTP, and it can pass or
-      fail independently of it.
-- [ ] 9.4 Re-run `npm run test:security`'s DNS/mail-auth checks (SPF/DKIM/DMARC, Phase 6's
+      fail independently of it. — done 2026-09-21: `npm run test:resend` → `OK — email delivered via
+      Resend` (from `info@formula-1.dk` to `f1_admin@helvegpovlsen.dk`, via the Resend API, using
+      test's current `RESEND_API_KEY`/`SMTP_FROM`).
+- [x] 9.4 Re-run `npm run test:security`'s DNS/mail-auth checks (SPF/DKIM/DMARC, Phase 6's
       parent-domain fallback) as a documented precondition immediately before 9.2 — if these are
       failing, delivery problems found in 9.2 are an expected consequence, not a new bug to chase.
-- [ ] 9.5 Write down the baseline result: pass/fail per path from 9.2/9.3, and the exact
+      — done 2026-09-21, run immediately before 9.2: 18 passed, 0 failed, 1 warning (pre-existing CAA
+      gap, unrelated). SPF ✔, DMARC ✔, DKIM ✔, all resolved on parent domain `helvegpovlsen.dk` per
+      Phase 6's fallback — confirms 9.2 is being attempted against a healthy mail-auth setup.
+- [x] 9.5 Write down the baseline result: pass/fail per path from 9.2/9.3, and the exact
       domain(s) currently in use for `SMTP_HOST` / `SMTP_FROM_EMAIL` / `SMTP_USER` on test. This
       baseline is the evidence for whether 9.6's refactor is actually warranted — not an assumption
-      going in.
+      going in. — done 2026-09-21.
+      - **DNS/mail-auth (9.4):** pass — SPF/DKIM/DMARC all resolve on parent `helvegpovlsen.dk`, 0
+        failures.
+      - **Primary SMTP transport, all inventoried paths (9.2):** pass — 34/34 (17 templates × da/en)
+        sent successfully via real Proton SMTP, confirmed non-intercepted.
+      - **Resend fallback transport (9.3):** pass — one health-check email delivered via the Resend
+        API.
+      - **Current config values on test:** `SMTP_HOST=smtp.protonmail.ch`,
+        `SMTP_USER=info@formula-1.dk`, `SMTP_FROM_EMAIL=info@formula-1.dk` — i.e. the actual
+        **sending** domain is `formula-1.dk` (live's own domain), not `helvegpovlsen.dk` and not
+        `formula-1.helvegpovlsen.dk`. Meanwhile `F1_ADMIN_EMAIL` (Resend report-to / preview-tool
+        recipient) is already `f1_admin@helvegpovlsen.dk`, and mail-auth (SPF/DKIM/DMARC) lives on
+        `helvegpovlsen.dk` — three different domains involved in one send. This three-way split is
+        exactly what 9.6 needs to evaluate: nothing in this baseline is currently *broken* (mail-auth
+        passes for `helvegpovlsen.dk`, and `formula-1.dk` presumably has its own separate SPF/DKIM
+        setup that this baseline didn't check since it's out of scope — live is untouched by this
+        epic), but the sending domain doesn't match the new test-site domain either, which is the
+        open question 9.6 exists to surface.
+      - **Not covered by this baseline (out of scope, not a gap):** live's SMTP config — this epic's
+        success metric requires live stay untouched, so `formula-1.dk`'s own mail-auth was
+        deliberately not re-verified here.
 
-#### 9b — Sending-domain review: decide before changing
+#### 9b — Email addressing strategy: decided and implemented 2026-09-21 — ✅ done
 
-- [ ] 9.6 **(decision point — present findings to Djarnis, do not decide unilaterally)** Using
-      9.5's baseline, lay out whether test's sending domain should move to `helvegpovlsen.dk`.
-      Points to surface, not resolve alone:
-      - Whether Proton Mail actually has `helvegpovlsen.dk` provisioned as a *verified sending*
-        domain (a DKIM signing key configured for outbound), not just a domain with SPF/DMARC TXT
-        records visible via DNS lookup — those are two different things, and Phase 6 only confirmed
-        the latter.
-      - Whether a project-scoped local part (mirroring the `<project>.helvegpovlsen.dk` convention
-        from Phase 8) is preferable to a bare `noreply@helvegpovlsen.dk`, so a future project's test
-        email doesn't collide in the same inbox the way `hpovlsen.dk`'s catch-all already does for
-        synced/fixture accounts (gotcha #15).
-      - Interaction with gotcha #14 (same-Proton-account self-send duplicate): moving `SMTP_FROM` to
-        another address on the *same* Proton account doesn't by itself avoid that failure mode —
-        check which account the candidate address resolves to before picking one.
-      - Whether this should ever extend to live's `SMTP_FROM` (`formula-1.dk` / `info@formula-1.dk`
-        today). Default assumption is **no** — out of scope for this epic per its live-untouched
-        success metric — unless Djarnis explicitly says otherwise.
-- [ ] 9.7 **(gate)** Get Djarnis's explicit go/no-go on the refactor before touching any config.
-      This changes a real address recipients see, not just an internal setting.
-- [ ] 9.8 If approved: update `config.test.php`'s `SMTP_FROM_EMAIL` (and `SMTP_USER`/`SMTP_HOST`
-      only if Proton requires a distinct login identity for the new sending domain), redeploy test,
-      then repeat 9.2's full send-and-verify pass end-to-end. A refactor isn't done until delivery
-      is re-proven, not merely deployed.
-- [ ] 9.9 Update docs alongside the config change (`docs/github-actions.md`,
-      `docs/disaster-recovery/runbook.md`, `config.example.php` comments) so the new sending-domain
-      convention is documented, not just implemented — same discipline as the rest of this epic.
-- [ ] 9.10 Re-run `npm run test:security` and `npm run test:resend` once more post-change as final
-      regression confirmation.
+- [x] 9.6 **(decision point — resolved through direct discussion with Djarnis, 2026-09-21, not
+      decided unilaterally)** Covers both halves of the question this phase opened with:
+      - **Sending identity: no change.** Test keeps sending as `info@formula-1.dk`
+        (`SMTP_HOST=smtp.protonmail.ch`, `SMTP_USER`/`SMTP_FROM_EMAIL=info@formula-1.dk`, unchanged
+        from 9.5's baseline). Moving to `helvegpovlsen.dk` was rejected once Djarnis raised a
+        constraint this epic hadn't known: **Simply.com does not support email addresses on a
+        subdomain at all** — so any `helvegpovlsen.dk`-based sending identity could only ever live
+        at the bare apex anyway, never as a project-scoped `formula-1.helvegpovlsen.dk` address
+        (consistent with Phase 6's finding that only the apex has SPF/DKIM/DMARC records). Given
+        that, and that `formula-1.dk` is already a known-working sending identity (it's live's own
+        domain), there was no upside left to moving — it would have traded a working setup for an
+        unverified one (the "is `helvegpovlsen.dk` actually DKIM-provisioned for *sending*, not
+        just SPF/DMARC records" unknown from the original framing was never resolved, because the
+        decision made it moot).
+      - **Test data (`sync:live` + E2E fixtures): move to `<original-local-part>+test@formula-1.dk`.**
+        Djarnis proposed "+"-addressing off `formula-1.dk`'s existing catch-all (confirmed
+        2026-09-21) as the no-manual-provisioning mechanism, ruling out a parallel move to
+        `helvegpovlsen.dk` for the same Simply.com subdomain reason above, and also sidestepping the
+        open question of whether `helvegpovlsen.dk` even has catch-all forwarding configured.
+        Confirmed exact shape: original local-part first, then a literal `+test` tag, e.g. synced
+        user `thomas@gmail.com` → `thomas+test@formula-1.dk`; fixture `e2e_auth_f1@hpovlsen.dk` →
+        `e2e_auth_f1+test@formula-1.dk`. This ordering (not `test+<original>@`) was chosen
+        specifically because it keeps the `e2e_` prefix at the very front of the local part, so the
+        existing `str_starts_with($email, 'e2e_')` half of `test-seed.php`'s safety guards survives
+        unchanged — only the domain-suffix half of those checks needs updating (see 9.8).
+      - **Two consequences accepted, not blockers:** (1) gotcha #14's same-Proton-account
+        send/receive display-dedup quirk becomes routine — sending (`info@formula-1.dk`) and every
+        rewritten test-data recipient now share the same domain/account, so expect Proton's UI to
+        show most test emails twice (sent + received view). Cosmetic, not a functional bug, but
+        constant instead of a one-off. (2) `sync-from-live.php`'s rewrite must be made idempotent —
+        strip any existing `+...` tag from the local part before adding `+test`, so re-running
+        `sync:live` doesn't accumulate `thomas+test+test@formula-1.dk`.
+      - `hpovlsen.dk` is untouched by this decision — it keeps its existing role per
+        `docs/conventions.md` (Phase 8); this only means *new* test-data mail stops being routed
+        there going forward, nothing about the domain itself changes.
+- [x] 9.7 **(gate)** — satisfied 2026-09-21: Djarnis gave explicit approval for the
+      `<original-local-part>+test@formula-1.dk` scheme through direct discussion in this session,
+      including confirming the exact tag shape. Nothing on the sending-identity side needed
+      approval since no change was proposed there.
+- [x] 9.8 Implement the `<original-local-part>+test@formula-1.dk` scheme — done 2026-09-21.
+      - `sync-from-live.php:104-113`: rewrite logic now strips any existing `+...` suffix from the
+        local part first (idempotency — handles a live user whose *real* address already contains a
+        `+tag`, and defensively guards against any future double-processing), then appends
+        `+test@formula-1.dk`. The `$testEmails` stale-invite cleanup list (3 literals) updated to
+        match. `f1_admin@helvegpovlsen.dk`'s separate preserve/restore path (queries test's own DB
+        by `F1_ADMIN_EMAIL`, bypasses the per-row loop entirely) is untouched by this, as designed.
+      - `test-seed.php`: all 35 hardcoded `@hpovlsen.dk` fixture literals mechanically swapped to
+        `+test@formula-1.dk` (verified via `grep -c hpovlsen` → 0 after). The `str_ends_with($email,
+        '@hpovlsen.dk')` half of the safety guard in both `cleanup_passkeys` and
+        `set_passkey_sign_count` now checks `'+test@formula-1.dk'`; the `e2e_`-prefix half is
+        unchanged, exactly as planned in 9.6. `php -l` clean.
+      - The six `tests/e2e/**` specs (`02-auth`, `05-profile`, `07-cron`, `admin/11-invites`,
+        `admin/12-users`, `admin/13-scoring`) updated the same way; `node --check` clean on all six.
+      - `public/mfa_challenge.php`'s one remaining `@hpovlsen.dk` reference is a doc-comment example
+        of `maskEmail()`'s output format, unrelated to fixtures/sync — left alone, out of this
+        item's scope.
+      - Redeployed test (`npm run deploy:test`, 8/8 smoke passed), then ran the full
+        `npm run test:e2e:test` pass: **all 12 suites green, 114/114 Paddock Challenges tests
+        included** — covers every spec touched above, confirming the safety-guard suffix change
+        didn't regress `cleanup_passkeys`/`set_passkey_sign_count`.
+      - Ran `npm run sync:live` twice back-to-back. First run: all 8 synced users landed as
+        `<local>+test@formula-1.dk` (spot-checked via direct DB query), `f1_admin@helvegpovlsen.dk`
+        untouched. Second run: byte-for-byte identical email list — confirms the idempotency fix
+        holds, no `+test+test` accumulation.
+- [x] 9.9 Update `docs/gotchas.md`'s gotcha #15 to describe the new
+      `<original-local-part>+test@formula-1.dk` scheme (it currently describes `@hpovlsen.dk`
+      verbatim). This is the only doc that needs updating this time — `docs/github-actions.md`,
+      `docs/disaster-recovery/runbook.md`, and `config.example.php` all describe the *sending*
+      identity, which per 9.6 isn't changing. — done 2026-09-21, folded into the f1_admin
+      domain-change work below (9c) since both touched the same section: rewrote gotcha #15's
+      heading, body, and TOC anchor, and gotcha #14's example (which also referenced the old
+      `f1_admin@helvegpovlsen.dk`) to note it now applies on both live and test. `docs/gotchas.md`
+      was the only file this item named, and no other doc needed touching, as predicted.
+- [x] 9.10 Confirm real delivery for the new address shape — done 2026-09-21, but not via
+      `send_email_preview` as originally planned: that action always targets the fixed
+      `F1_ADMIN_EMAIL`, so it can't actually exercise a `+test@formula-1.dk` address and re-running
+      it would have just re-proven the same F1_ADMIN_EMAIL path 9.2 already covered. Instead, ran a
+      one-off local script (never committed) that `require`s `config.test.php` +
+      `public/includes/smtp.php` directly on this dev machine and calls `sendEmail()` straight to
+      Proton's SMTP — since `emailIntercepted()` checks a temp-dir flag file that only the deployed
+      *server* can set, running locally makes interception structurally impossible, no
+      `get_test_emails` check needed. Sent to both address shapes 9.8 produces:
+      `thomas+test@formula-1.dk` (synced real-user shape) and `e2e_auth_f1+test@formula-1.dk` (e2e
+      fixture shape). Both returned `{"success":true,"message":"Email sent successfully via SMTP"}`
+      — the literal SMTP-path success message, not the intercepted-path one — confirming Proton
+      *accepted* both for delivery. **Confirmed by Djarnis 2026-09-21:** both emails received —
+      proves the `formula-1.dk` catch-all genuinely honors `+`-tags end-to-end for both address
+      shapes, not just that Proton's SMTP accepted the send. This was the one part of the whole
+      9.6-9.8 decision that hadn't been empirically proven until now. No caveats remaining.
+
+#### 9c — `f1_admin` service account: move to `formula-1.dk` — ✅ done 2026-09-21
+
+Raised by Djarnis after 9.8-9.10: the `F1_ADMIN_EMAIL` service/automation account
+(`f1_admin@helvegpovlsen.dk`) was still on the old domain even though everything else test-related
+had moved to `formula-1.dk`. Request: keep the account and its special "preserved across
+`sync:live`" treatment exactly as-is, just change its domain.
+
+- [x] 9.11 **(scope check — asked Djarnis before touching anything)** `F1_ADMIN_EMAIL` turned out
+      not to be test-only: `config.live.php` defines the identical constant, and
+      `.github/workflows/nightly-tests.yml` hardcodes `f1_admin@helvegpovlsen.dk` as
+      `TEST_USER_EMAIL_LIVE` — the credential CI uses to log into **production** every night. Given
+      the stakes (a live CI credential, a real production DB row), asked rather than assumed.
+      **Decision: test only.** `config.live.php`, live's own DB, and `nightly-tests.yml`'s
+      live-scoped line are all untouched.
+- [x] 9.12 Implemented and verified, test only:
+      - `config.test.php`: `F1_ADMIN_EMAIL` → `f1_admin@formula-1.dk`.
+      - Test's own DB: the existing `users` row's `email` renamed from `f1_admin@helvegpovlsen.dk`
+        to the new address via a direct one-off `UPDATE` (test DB only) — necessary because
+        `sync-from-live.php`'s preserve/restore step looks the row up *by* `F1_ADMIN_EMAIL`; without
+        this the account would have silently vanished on the next `sync:live` (old row no longer
+        matching the new constant, nothing to restore).
+      - `config.example.php` and `build-deploy/.env.example`: example values updated/annotated to
+        note test and live are now allowed to diverge here.
+      - `docs/gotchas.md`: folded in as 9.9 above (gotcha #14's example, gotcha #15's admin-account
+        line).
+      - `docs/disaster-recovery/runbook.md` (test DR drill table) and `drill-plan-test.md` updated;
+        `drill-plan-live.md` and `runbook.md`'s live-restore step (both still genuinely
+        `f1_admin@helvegpovlsen.dk`) left untouched.
+      - Checked whether any GitHub Actions secret/variable needed updating: **no.** `REPORT_TO` (a
+        repo variable, still `f1_admin@helvegpovlsen.dk`) only feeds `nightly-tests.yml`'s
+        `DEPLOY_ENV: live` job — unrelated to this change. `TEST_USER_EMAIL_TEST` is referenced in
+        `e2e-test-orchestrator.yml` but was **never actually set** (`gh secret list` confirms) — the
+        app's own fallback chain (`cfg.adminEmail` from `config.test.php`) has been doing the real
+        work all along, so it already picks up the new address with no CI change needed.
+      - Redeployed test (`npm run deploy:test`) and confirmed end-to-end via the deploy's own smoke
+        suite: the "authed" checks (`tests/smoke.js`) do a real login POST using
+        `config.test.php`'s admin credentials — both passed, meaning the new address
+        (`f1_admin@formula-1.dk`) successfully authenticated against the renamed DB row on the live
+        test server. No separate ad-hoc login test needed; the routine deploy step already proved it.
 
 ### Phase 10 — Old FTP directory cleanup (strictly last, destructive, gated)
 
@@ -535,11 +718,14 @@ runs. (NFR-803)
 - Renaming/rotating any secret (`CRON_SECRET`, `INTEGRATION_SEED_TOKEN`, `MFA_KEY`,
   `PASSWORD_PEPPER`, …). This is a hostname/FTP-path change only; nothing here calls for touching
   cryptographic material.
-- Anything about `hpovlsen.dk`'s DNS/MX/email setup. That domain keeps functioning exactly as it
-  does today for `sync-from-live.php`/e2e-fixture email purposes — this epic only removes its
-  file-hosting role and the files at `/hpovlsen.dk`, never its DNS records or mail routing.
-  (Phase 9, added 2026-09-20, is a narrow, deliberate exception to this: it audits — and, pending
-  Djarnis's go/no-go, potentially reconfigures — the test app's own outbound `SMTP_FROM_EMAIL`
-  identity. It does not touch `hpovlsen.dk`'s DNS/MX, which remains untouched either way.)
+- Anything about `hpovlsen.dk`'s own DNS/MX/email setup — this epic only removes its file-hosting
+  role and the files at `/hpovlsen.dk`, never its DNS records or mail routing; `hpovlsen.dk` itself
+  is not reconfigured by anything in Phase 9. (Phase 9, added 2026-09-20, audited the test app's
+  own outbound `SMTP_FROM_EMAIL` identity as a narrow, deliberate exception to "nothing about mail
+  changes" — the eventual 9.6 decision kept it unchanged, at `info@formula-1.dk`.) What **does**
+  change per 9.6/9.8: `sync-from-live.php` and E2E fixtures stop *routing new test data* to
+  `@hpovlsen.dk`, moving to `<original-local-part>+test@formula-1.dk` instead — `hpovlsen.dk`'s own
+  configuration is untouched either way, this just means it stops being the destination for mail
+  this app's test tooling generates going forward.
 - A generalized "test subdomain provisioning" tool or script. One manual Simply.com setup plus one
   written convention is the right amount of process for how rarely new projects start.

@@ -114,6 +114,10 @@ as a side effect.
 - The test-subdomain naming convention is written down somewhere Djarnis confirms he'll actually
   reference when the next project needs a test environment — this epic doesn't count as "done" if
   the only artifact is the domain change itself.
+- Every email-sending code path on the test environment (registration, password reset, MFA email
+  OTP, challenge invites, admin notifications, the notifications cron, Resend fallback) is confirmed
+  to actually deliver against `formula-1.helvegpovlsen.dk` — verified by checking a real inbox, not
+  assumed from the application reporting success (Phase 9, added 2026-09-20).
 
 ## Acceptance Criteria
 
@@ -166,6 +170,14 @@ Feature: Test site migrated to formula-1.helvegpovlsen.dk
     When Djarnis looks for how test subdomains should be named
     Then a written convention — not this conversation's memory — tells them to use
       <project>.helvegpovlsen.dk
+
+  Scenario: Test-environment email actually delivers after the domain migration
+    Given the test site is fully migrated and every prior phase has passed
+    When each email-sending code path is exercised against formula-1.helvegpovlsen.dk with
+      SMTP_INTERCEPT off
+    Then the message is confirmed delivered to a real inbox, not merely reported as sent by the
+      application — and any sending-domain refactor to helvegpovlsen.dk happens only after Djarnis's
+      explicit go/no-go, never assumed from the delivery check alone
 ```
 
 ## Implementation Plan (Step-by-Step)
@@ -236,7 +248,7 @@ before proceeding, per CLAUDE.md's f1-intelligence rule or this epic's own destr
       (200) against `https://www.formula-1.helvegpovlsen.dk`, including both authenticated checks,
       which require a real POST login — confirms `www.` does not drop the POST body or session.
 - [x] 3.4 Spot-check that `/hpovlsen.dk` on the FTP server was **not** written to by this deploy —
-      it must keep serving the old domain untouched as a fallback until Phase 9. (Test Scenario,
+      it must keep serving the old domain untouched as a fallback until Phase 10. (Test Scenario,
       Feature 1) — confirmed 2026-09-20 by the deploy log itself (`build-deploy/deploy.js` uploads
       to the single `FTP_ROOT_TEST` path only): "✅ Done! Uploaded to /test.formula-1.dk", no writes
       to `/hpovlsen.dk` in this run.
@@ -400,41 +412,114 @@ before proceeding, per CLAUDE.md's f1-intelligence rule or this epic's own destr
       addresses (`f1_admin@helvegpovlsen.dk`, `thomas@helvegpovlsen.dk` in `nightly-report.js` /
       `security-review.js` / `.env.example` / CI secrets) — none of which this epic touches.
 
-### Phase 8 — Write down the convention
+### Phase 8 — Write down the convention — ✅ done 2026-09-21
 
-- [ ] 8.1 Draft the convention note covering both: (a) `<project>.helvegpovlsen.dk` is the standard
+- [x] 8.1 Draft the convention note covering both: (a) `<project>.helvegpovlsen.dk` is the standard
       test-subdomain pattern for every future project, and (b) `hpovlsen.dk` the domain is **not**
       decommissioned — it keeps its email role (gotcha #15); only its file-hosting role and old FTP
-      directory are retired. (REQ-906, REQ-907)
-- [ ] 8.2 **(open question — ask Djarnis)** Where should this note live for cross-project
+      directory are retired. (REQ-906, REQ-907) — written as `docs/conventions.md`, deliberately
+      self-contained (no dependency on this repo's `CLAUDE.md` or memory) so it reads correctly if
+      moved elsewhere.
+- [x] 8.2 **(resolved 2026-09-21 — asked Djarnis)** Where should this note live for cross-project
       visibility, since a brand-new project's own repo won't have this repo's `CLAUDE.md` or memory
-      in context? Candidates: a personal ops/notes location Djarnis keeps outside any single project
-      repo, or a line in whatever bootstrapping checklist/template he uses when starting a new
-      project. Do not silently pick one — this is explicitly flagged as undecided. (REQ-906)
+      in context? **Decision: keep it in this repo for now** (`docs/conventions.md`, linked from
+      `CLAUDE.md`'s doc table), written so it's easy to move to a personal ops/notes location later
+      without rewriting it. Not a bootstrapping-template line — that option was offered but not
+      chosen. (REQ-906)
 
-### Phase 9 — Old FTP directory cleanup (strictly last, destructive, gated)
+### Phase 9 — Email deliverability verification & sending-domain review (added 2026-09-20; moved ahead of the FTP cleanup phase on 2026-09-21)
 
-- [ ] 9.1 **(manual)** List `/hpovlsen.dk`'s full contents on the FTP server. Confirm the set matches
+Added after Phase 6 (Security heuristic check) surfaced that SPF/DKIM/DMARC records for the test
+domain resolve on the registrable **parent** (`helvegpovlsen.dk`), not on
+`formula-1.helvegpovlsen.dk` itself (`tests/security/security.js`'s `mailParent` fallback) — which
+raises a separate question this epic hadn't asked yet: is the app's actual outbound *sending*
+domain (`SMTP_FROM_EMAIL` in `config.test.php`) aligned with where mail authentication actually
+lives? This phase runs **before** Phase 10 (old FTP directory cleanup) deliberately: Phase 10 is
+destructive and permanently closes the rollback window, so email deliverability — a core piece of
+"the migration actually works" — must be proven while rollback is still possible, not after. It
+exists to (a) prove email delivery actually works end-to-end on the new test domain — not just
+that the app reports no error — and (b) evaluate, not assume, whether `helvegpovlsen.dk` should
+become the test environment's sending domain. Scoped to **test only**; see the amended Out of
+Scope note below for why this doesn't reopen `hpovlsen.dk`'s DNS/MX.
+
+#### 9a — Baseline: verify current behavior first, before changing anything
+
+- [ ] 9.1 Inventory every email-sending code path in the app, with file + trigger condition for
+      each: registration confirmation, password reset, MFA email OTP (`public/includes/mfa.php`),
+      challenge invites (`public/challenges-invite.php`, `public/challenges-join.php`),
+      admin-triggered notifications (`public/admin.php`, `public/admin-challenges.php`), the
+      notifications cron (`public/cron/notifications.php`), and the CI nightly report /
+      `npm run test:resend`. This checklist is what 9.2 actually tests against, not vibes.
+- [ ] 9.2 With `SMTP_INTERCEPT` off (send-for-real is the test-env default per gotcha #17), trigger
+      each path against `https://www.formula-1.helvegpovlsen.dk` and confirm **actual delivery** to
+      a real inbox — check the Proton "Sent" folder and the destination inbox for each, not just
+      that the app returned success. A soft bounce or silent drop looks identical to a successful
+      send from the application's point of view.
+- [ ] 9.3 Separately verify the Resend fallback transport (`npm run test:resend`) against test's
+      current config values — a different code path/provider than primary SMTP, and it can pass or
+      fail independently of it.
+- [ ] 9.4 Re-run `npm run test:security`'s DNS/mail-auth checks (SPF/DKIM/DMARC, Phase 6's
+      parent-domain fallback) as a documented precondition immediately before 9.2 — if these are
+      failing, delivery problems found in 9.2 are an expected consequence, not a new bug to chase.
+- [ ] 9.5 Write down the baseline result: pass/fail per path from 9.2/9.3, and the exact
+      domain(s) currently in use for `SMTP_HOST` / `SMTP_FROM_EMAIL` / `SMTP_USER` on test. This
+      baseline is the evidence for whether 9.6's refactor is actually warranted — not an assumption
+      going in.
+
+#### 9b — Sending-domain review: decide before changing
+
+- [ ] 9.6 **(decision point — present findings to Djarnis, do not decide unilaterally)** Using
+      9.5's baseline, lay out whether test's sending domain should move to `helvegpovlsen.dk`.
+      Points to surface, not resolve alone:
+      - Whether Proton Mail actually has `helvegpovlsen.dk` provisioned as a *verified sending*
+        domain (a DKIM signing key configured for outbound), not just a domain with SPF/DMARC TXT
+        records visible via DNS lookup — those are two different things, and Phase 6 only confirmed
+        the latter.
+      - Whether a project-scoped local part (mirroring the `<project>.helvegpovlsen.dk` convention
+        from Phase 8) is preferable to a bare `noreply@helvegpovlsen.dk`, so a future project's test
+        email doesn't collide in the same inbox the way `hpovlsen.dk`'s catch-all already does for
+        synced/fixture accounts (gotcha #15).
+      - Interaction with gotcha #14 (same-Proton-account self-send duplicate): moving `SMTP_FROM` to
+        another address on the *same* Proton account doesn't by itself avoid that failure mode —
+        check which account the candidate address resolves to before picking one.
+      - Whether this should ever extend to live's `SMTP_FROM` (`formula-1.dk` / `info@formula-1.dk`
+        today). Default assumption is **no** — out of scope for this epic per its live-untouched
+        success metric — unless Djarnis explicitly says otherwise.
+- [ ] 9.7 **(gate)** Get Djarnis's explicit go/no-go on the refactor before touching any config.
+      This changes a real address recipients see, not just an internal setting.
+- [ ] 9.8 If approved: update `config.test.php`'s `SMTP_FROM_EMAIL` (and `SMTP_USER`/`SMTP_HOST`
+      only if Proton requires a distinct login identity for the new sending domain), redeploy test,
+      then repeat 9.2's full send-and-verify pass end-to-end. A refactor isn't done until delivery
+      is re-proven, not merely deployed.
+- [ ] 9.9 Update docs alongside the config change (`docs/github-actions.md`,
+      `docs/disaster-recovery/runbook.md`, `config.example.php` comments) so the new sending-domain
+      convention is documented, not just implemented — same discipline as the rest of this epic.
+- [ ] 9.10 Re-run `npm run test:security` and `npm run test:resend` once more post-change as final
+      regression confirmation.
+
+### Phase 10 — Old FTP directory cleanup (strictly last, destructive, gated)
+
+- [ ] 10.1 **(manual)** List `/hpovlsen.dk`'s full contents on the FTP server. Confirm the set matches
       exactly what this repo's tooling put there: `public/`, `config.php`, `config.shared.php`, and
       conditionally `bin/state/`. If anything else is present, **stop and ask Djarnis** before
       deleting anything. (REQ-809.1)
-- [ ] 9.2 **(gate)** Get Djarnis's explicit approval specifically for deleting the deployed
+- [ ] 10.2 **(gate)** Get Djarnis's explicit approval specifically for deleting the deployed
       `f1-intelligence/` client instance at `/hpovlsen.dk/public/f1-intelligence/` — separate from
       the doc-edit approval in 7.3; deleting a live-adjacent deployed instance is a bigger action.
       (REQ-809.2)
-- [ ] 9.3 **(gate)** Get Djarnis's explicit sign-off that every Phase 1–8 scenario has passed and
+- [ ] 10.3 **(gate)** Get Djarnis's explicit sign-off that every Phase 1–9 scenario has passed and
       he's ready for irreversible cleanup.
-- [ ] 9.4 **(manual)** Delete `/hpovlsen.dk` via an FTP client or Simply.com's File Manager — a
+- [ ] 10.4 **(manual)** Delete `/hpovlsen.dk` via an FTP client or Simply.com's File Manager — a
       one-off action, never scripted or run unattended. (REQ-809.4)
-- [ ] 9.5 Confirm the test database is unaffected (row counts/content unchanged) — this is a
+- [ ] 10.5 Confirm the test database is unaffected (row counts/content unchanged) — this is a
       filesystem-only action with no DB dependency. (REQ-809.3)
 
-### Rollback (only if a problem surfaces before Phase 9 runs)
+### Rollback (only if a problem surfaces before Phase 10 runs)
 
 Revert `config.test.php` + `build-deploy/.env` to their pre-migration values, redeploy via
 `npm run deploy:test`, and flip `BASE_URL_TEST` back to `https://www.hpovlsen.dk` **in the same
 action** — reverting only the code/config side while CI still points at the new domain reproduces
-the exact failure NFR-802 exists to prevent, in reverse. This window closes permanently once Phase 9
+the exact failure NFR-802 exists to prevent, in reverse. This window closes permanently once Phase 10
 runs. (NFR-803)
 
 ## Out of Scope
@@ -453,5 +538,8 @@ runs. (NFR-803)
 - Anything about `hpovlsen.dk`'s DNS/MX/email setup. That domain keeps functioning exactly as it
   does today for `sync-from-live.php`/e2e-fixture email purposes — this epic only removes its
   file-hosting role and the files at `/hpovlsen.dk`, never its DNS records or mail routing.
+  (Phase 9, added 2026-09-20, is a narrow, deliberate exception to this: it audits — and, pending
+  Djarnis's go/no-go, potentially reconfigures — the test app's own outbound `SMTP_FROM_EMAIL`
+  identity. It does not touch `hpovlsen.dk`'s DNS/MX, which remains untouched either way.)
 - A generalized "test subdomain provisioning" tool or script. One manual Simply.com setup plus one
   written convention is the right amount of process for how rarely new projects start.

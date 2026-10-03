@@ -680,22 +680,22 @@ had moved to `formula-1.dk`. Request: keep the account and its special "preserve
         (`f1_admin@formula-1.dk`) successfully authenticated against the renamed DB row on the live
         test server. No separate ad-hoc login test needed; the routine deploy step already proved it.
 
-### Phase 10 — Old FTP directory cleanup (strictly last, destructive, gated)
+### Phase 10 — Old FTP directory cleanup (strictly last, destructive, gated) — ✅ done 2026-10-03
 
-- [ ] 10.1 **(manual)** List `/hpovlsen.dk`'s full contents on the FTP server. Confirm the set matches
+- [x] 10.1 **(manual)** List `/hpovlsen.dk`'s full contents on the FTP server. Confirm the set matches
       exactly what this repo's tooling put there: `public/`, `config.php`, `config.shared.php`, and
       conditionally `bin/state/`. If anything else is present, **stop and ask Djarnis** before
       deleting anything. (REQ-809.1)
-- [ ] 10.2 **(gate)** Get Djarnis's explicit approval specifically for deleting the deployed
+- [x] 10.2 **(gate)** Get Djarnis's explicit approval specifically for deleting the deployed
       `f1-intelligence/` client instance at `/hpovlsen.dk/public/f1-intelligence/` — separate from
       the doc-edit approval in 7.3; deleting a live-adjacent deployed instance is a bigger action.
       (REQ-809.2)
-- [ ] 10.3 **(gate)** Get Djarnis's explicit sign-off that every Phase 1–9 scenario has passed and
+- [x] 10.3 **(gate)** Get Djarnis's explicit sign-off that every Phase 1–9 scenario has passed and
       he's ready for irreversible cleanup.
-- [ ] 10.4 **(manual)** Delete `/hpovlsen.dk` via an FTP client or Simply.com's File Manager — a
+- [x] 10.4 **(manual)** Delete `/hpovlsen.dk` via an FTP client or Simply.com's File Manager — a
       one-off action, never scripted or run unattended. (REQ-809.4)
-- [ ] 10.5 Confirm the test database is unaffected (row counts/content unchanged) — this is a
-      filesystem-only action with no DB dependency. (REQ-809.3)
+- [x] 10.5 Confirm the test database is unaffected (row counts/content unchanged) — this is a
+      filesystem-only action with no DB dependency. (REQ-809.3) `npm run schema:check` passed against test after the deletion.
 
 ### Rollback (only if a problem surfaces before Phase 10 runs)
 

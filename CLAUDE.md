@@ -27,7 +27,7 @@ Djarnis has 7 workspaces, one repo each under `~/github/` — the other 6 are no
 | Robinsonklubben | `~/github/robinsonklubben.dk` | robinsonklubben.dk (+ Rejsekrukken on ture.helvegpovlsen.dk) |
 | formula-1.dk **(this repo)** | `~/github/formula-1.dk` | formula-1.dk |
 | helvegpovlsen.dk | `~/github/helvegpovlsen.dk` | helvegpovlsen.dk |
-| FFB | `~/github/Fodbold-Forening-Broendby` | (none) |
+| FFB | `~/github/FFB` | (none) |
 | djarnis.dk | `~/github/djarnis.dk` | djarnis.dk |
 | domains | `~/github/domains` | frk-p.dk, hpovlsen.dk, bertrampovlsen.dk |
 | homelab | `~/github/homelab` | (none) |

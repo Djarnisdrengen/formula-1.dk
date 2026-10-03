@@ -20,6 +20,23 @@ tell Djarnis before planning or editing anything.** In 2026-09 a full 375-line i
 was written against the wrong repo this way; it was factually accurate and still completely wrong.
 Work on exactly one of these repos per session.
 
+Djarnis has 7 workspaces, one repo each under `~/github/` — the other 6 are not this repo:
+
+| Workspace | Repo | Domains |
+| --- | --- | --- |
+| Robinsonklubben | `~/github/robinsonklubben.dk` | robinsonklubben.dk (+ Rejsekrukken on ture.helvegpovlsen.dk) |
+| formula-1.dk **(this repo)** | `~/github/formula-1.dk` | formula-1.dk |
+| helvegpovlsen.dk | `~/github/helvegpovlsen.dk` | helvegpovlsen.dk |
+| FFB | `~/github/Fodbold-Forening-Broendby` | (none) |
+| djarnis.dk | `~/github/djarnis.dk` | djarnis.dk |
+| domains | `~/github/domains` | frk-p.dk, hpovlsen.dk, bertrampovlsen.dk |
+| homelab | `~/github/homelab` | (none) |
+
+Full details (stack, deploy command, colors): `~/github/homelab/docs/workspaces.md`.
+
+hpovlsen.dk (not helvegpovlsen.dk) is a parked email-only domain owned by the `domains` repo and has
+no role in this repo.
+
 ---
 
 ## Phase-plan compaction reminder

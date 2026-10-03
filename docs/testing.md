@@ -50,7 +50,7 @@ All tests run against the deployed site over HTTP — there is no local test ser
 | `npm run test:e2e:test` | A | Full user journeys — login, betting, admin, scoring, email delivery — 12 suites run sequentially | test | ~5 min (measured) |
 | `npm run test:e2e:<suite>` | A | One suite standalone (see [Suites](#suites) below) | test | a few seconds–~1m45s |
 | `npm run test:e2e:live` | A | Smoke suite only — read-only live health check | live | ~30s |
-| `npm run test:resend` | B | Sends one email directly via Resend API; verifies backup transport is operational | live | ~5s |
+| `npm run test:resend` / `test:resend:live` | B | Sends one email directly via Resend API using the key from `config.test.php` / `config.live.php`; verifies backup transport is operational | local → Resend API | ~5s |
 | `npm run test:email:preview` | B | Renders all 20 email types locally as HTML files for manual visual review | test | ~30s |
 | `npm run test:security` | B | OWASP headers, cookies, access control, CWE Top 25 | test or live | ~30s |
 | `npm run test:all` | B+A | smoke + unit + e2e:test | test | ~10 min |
@@ -690,9 +690,12 @@ xdg-open tests/email-previews/$(ls tests/email-previews | tail -1)/1_password_re
 ## Resend Health Check
 
 ```bash
-npm run test:resend
-# requires: RESEND_API_KEY=re_xxx SMTP_FROM=noreply@... REPORT_TO=you@... npm run test:resend
+npm run test:resend        # key from config.test.php
+npm run test:resend:live   # key from config.live.php
+# or explicit: RESEND_API_KEY=re_xxx SMTP_FROM=noreply@... REPORT_TO=you@... npm run test:resend
 ```
+
+Env vars (including `build-deploy/.env`) win over `config.<env>.php` — if `.env` sets `RESEND_API_KEY`, both scripts test that key, not the per-env one. Verifies the *local* config key only; the key actually on the server is whatever the last deploy wrote (or a later Nøgler & Rotation "Rotate now"), shown masked on `/tools/test_smtp.php`.
 
 Standalone Stack B script (`build-deploy/verify-resend.js`). Calls `makeResendSender()` from `mailer.js` directly — no SMTP involved — and sends a single test email via the Resend API. Exits 0 on success, 1 on failure.
 
@@ -806,7 +809,7 @@ Because fixtures and synced live accounts now share a domain, `test-seed.php`'s 
 | `test:e2e:test` | Captured to JSONL — no real send |
 | `test:security` | None — HTTP scanner only, no emails triggered |
 | `test:email:preview` | Captured to JSONL — HTML files written locally |
-| `test:resend` | Real Resend API send to `REPORT_TO` (verifies backup transport) |
+| `test:resend` / `test:resend:live` | Real Resend API send to `REPORT_TO` (verifies backup transport) |
 
 ### Inboxes asserted in E2E tests
 

@@ -219,7 +219,7 @@ On the test environment `config.test.php` sets `SMTP_INTERCEPT = true`, which ma
 - **Manual capture**: flip **Admin → Settings → Email delivery** to "Switch to capture" (and back). The shared helpers are `emailIntercepted()` and `smtpInterceptFlagPath()` in `public/includes/smtp.php`.
 - **Live**: `SMTP_INTERCEPT` is undefined, so email always sends and the toggle is hidden.
 
-`npm run test:resend` reads `RESEND_API_KEY` / `SMTP_FROM` / `REPORT_TO` from env vars if present, otherwise falls back to `config.<env>.php` (RESEND_API_KEY, SMTP_FROM_EMAIL, REPORT_TO→F1_ADMIN_EMAIL) — so it runs locally without a `build-deploy/.env`.
+`npm run test:resend` (and `test:resend:live`, which sets `DEPLOY_ENV=live`) reads `RESEND_API_KEY` / `SMTP_FROM` / `REPORT_TO` from env vars if present, otherwise falls back to `config.<env>.php` (RESEND_API_KEY, SMTP_FROM_EMAIL, REPORT_TO→F1_ADMIN_EMAIL) — so it runs locally without a `build-deploy/.env`.
 
 ---
 

@@ -1,0 +1,195 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="_card.css">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+  .set {
+    border-radius: 14px; padding: 18px 20px 22px;
+    border: 1px solid var(--border-color);
+    margin-top: 14px;
+  }
+  .set-head {
+    display: flex; align-items: baseline; gap: 10px;
+    margin-bottom: 16px; padding-bottom: 12px;
+    border-bottom: 1px dashed currentColor;
+    opacity: 1;
+  }
+  .set-head h3 {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+    margin: 0;
+  }
+  .set-head p {
+    font-family: var(--font-body); font-size: 11px;
+    margin: 0; opacity: 0.7;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px 8px; }
+  .ic { display:flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+  .ic i { font-size: 22px; line-height: 1; }
+  .ic span {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 9px; opacity: 0.55;
+    word-break: break-word;
+  }
+
+  /* ---- Broadcast set (solid, accent red, sharp) ---- */
+  .set.broadcast { background: #1c1c20; color: #f5f5f7; border-color: #34343a; }
+  .set.broadcast .set-head { border-color: #34343a; }
+  .set.broadcast .ic i        { color: #b8b8be; }
+  .set.broadcast .ic i.accent { color: #e10600; }
+
+  /* ---- Clubhouse set (warm brass on paddock) ---- */
+  /* NB: do NOT override font-weight here — FA6 free needs weight 900 for `fas`
+     glyphs and weight 400 for `far`; forcing 400 breaks every solid icon. */
+  .set.clubhouse { background: #1f1a14; color: #f3ecdc; border-color: #4a423a; }
+  .set.clubhouse .set-head { border-color: #4a423a; }
+  .set.clubhouse .ic i        { color: #c8bba0; }
+  .set.clubhouse .ic i.accent { color: #b8893f; }
+
+  /* Light variant — same glyphs, oxblood accent on cream paper */
+  .set.clubhouse-light {
+    background: #fbf6ea; color: #2a2520; border-color: #d4c6a8;
+  }
+  .set.clubhouse-light .set-head { border-color: #d4c6a8; }
+  .set.clubhouse-light .ic i        { color: #5a4f44; }
+  .set.clubhouse-light .ic i.accent { color: #8a1f1a; }
+
+  .legend {
+    display: flex; gap: 14px; font-size: 11px;
+    margin-top: 4px;
+    font-family: ui-monospace, Menlo, monospace;
+    color: var(--text-muted);
+  }
+  .legend b {
+    font-family: var(--font-display); font-weight: 800; font-size: 9px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 4px;
+    background: rgba(255,255,255,0.06); color: inherit;
+    margin-right: 4px;
+  }
+</style></head>
+<body class="dark"><div class="card-frame">
+  <div class="label-tiny">Iconography · two-palette system · color inherits from theme tokens</div>
+
+  <p style="font-family: var(--font-body); font-size: 13px; line-height: 1.5; color: var(--text-secondary); margin: 4px 0 14px; max-width: 70ch;">
+    Same semantic slots, two visual registers. <b>Broadcast</b> uses solid Font Awesome glyphs and signal red — race-director energy. <b>Clubhouse</b> swaps to softer regular-weight glyphs and brass accents — coffee-and-newsletter energy. Switch the icon class as part of the same toggle that flips the palette.
+  </p>
+
+  <!-- ============================================================
+       BROADCAST SET — solid, sharp, accent red
+       Active when <body class="dark"> or <body class="light"> (no clubhouse)
+       ============================================================ -->
+  <div class="set broadcast">
+    <div class="set-head">
+      <h3>Broadcast</h3>
+      <p>fas · solid · accent <code>--f1-red</code></p>
+    </div>
+    <div class="grid">
+      <div class="ic"><i class="fas fa-home"></i><span>home</span></div>
+      <div class="ic"><i class="fas fa-trophy accent"></i><span>trophy</span></div>
+      <div class="ic"><i class="fas fa-flag accent"></i><span>flag</span></div>
+      <div class="ic"><i class="fas fa-book"></i><span>book</span></div>
+      <div class="ic"><i class="fas fa-cog"></i><span>cog</span></div>
+      <div class="ic"><i class="fas fa-user"></i><span>user</span></div>
+      <div class="ic"><i class="fas fa-sign-in-alt"></i><span>sign-in</span></div>
+      <div class="ic"><i class="fas fa-map-marker-alt"></i><span>map-pin</span></div>
+      <div class="ic"><i class="fas fa-clock"></i><span>clock</span></div>
+      <div class="ic"><i class="fas fa-hourglass-half"></i><span>hourglass</span></div>
+      <div class="ic"><i class="fas fa-stopwatch"></i><span>stopwatch</span></div>
+      <div class="ic"><i class="fas fa-edit"></i><span>edit</span></div>
+      <div class="ic"><i class="fas fa-users"></i><span>users</span></div>
+      <div class="ic"><i class="fas fa-chevron-down"></i><span>chevron</span></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CLUBHOUSE SET — regular weight, warmer glyphs, brass accents
+       Active when <body class="dark clubhouse">
+       Same semantic slots — glyphs lean lifestyle/club rather than broadcast
+       ============================================================ -->
+  <div class="set clubhouse">
+    <div class="set-head">
+      <h3>Clubhouse · paddock (dark)</h3>
+      <p>far · regular · accent <code>--c-brass</code></p>
+    </div>
+    <div class="grid">
+      <div class="ic"><i class="fas fa-mug-hot"></i><span>home</span></div>
+      <div class="ic"><i class="fas fa-award accent"></i><span>trophy</span></div>
+      <div class="ic"><i class="fas fa-flag-checkered accent"></i><span>flag</span></div>
+      <div class="ic"><i class="fas fa-scroll"></i><span>book</span></div>
+      <div class="ic"><i class="fas fa-sliders"></i><span>cog</span></div>
+      <div class="ic"><i class="fas fa-user-tie"></i><span>user</span></div>
+      <div class="ic"><i class="fas fa-door-open"></i><span>sign-in</span></div>
+      <div class="ic"><i class="fas fa-location-dot"></i><span>map-pin</span></div>
+      <div class="ic"><i class="far fa-clock"></i><span>clock</span></div>
+      <div class="ic"><i class="far fa-hourglass"></i><span>hourglass</span></div>
+      <div class="ic"><i class="fas fa-mug-saucer"></i><span>stopwatch</span></div>
+      <div class="ic"><i class="fas fa-pen-nib"></i><span>edit</span></div>
+      <div class="ic"><i class="fas fa-people-group"></i><span>users</span></div>
+      <div class="ic"><i class="fas fa-angle-down"></i><span>chevron</span></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CLUBHOUSE SET on cream — same glyphs, oxblood accent on light bg
+       Active when <body class="light clubhouse">
+       ============================================================ -->
+  <div class="set clubhouse-light">
+    <div class="set-head">
+      <h3>Clubhouse · cream paper (light)</h3>
+      <p>far · regular · accent <code>--c-oxblood</code></p>
+    </div>
+    <div class="grid">
+      <div class="ic"><i class="fas fa-mug-hot"></i><span>home</span></div>
+      <div class="ic"><i class="fas fa-award accent"></i><span>trophy</span></div>
+      <div class="ic"><i class="fas fa-flag-checkered accent"></i><span>flag</span></div>
+      <div class="ic"><i class="fas fa-scroll"></i><span>book</span></div>
+      <div class="ic"><i class="fas fa-sliders"></i><span>cog</span></div>
+      <div class="ic"><i class="fas fa-user-tie"></i><span>user</span></div>
+      <div class="ic"><i class="fas fa-door-open"></i><span>sign-in</span></div>
+      <div class="ic"><i class="fas fa-location-dot"></i><span>map-pin</span></div>
+      <div class="ic"><i class="far fa-clock"></i><span>clock</span></div>
+      <div class="ic"><i class="far fa-hourglass"></i><span>hourglass</span></div>
+      <div class="ic"><i class="fas fa-mug-saucer"></i><span>stopwatch</span></div>
+      <div class="ic"><i class="fas fa-pen-nib"></i><span>edit</span></div>
+      <div class="ic"><i class="fas fa-people-group"></i><span>users</span></div>
+      <div class="ic"><i class="fas fa-angle-down"></i><span>chevron</span></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Slot → glyph mapping table — copy into components
+       ============================================================ -->
+  <div style="margin-top: 22px; padding: 14px 16px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-secondary);">
+    <div class="label-tiny" style="margin-bottom: 10px;">Mapping · same slot, different glyph per palette</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px 18px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; line-height: 1.7;">
+      <div style="opacity: 0.6;">slot</div>
+      <div style="opacity: 0.6;">broadcast</div>
+      <div style="opacity: 0.6;">clubhouse</div>
+
+      <div>home</div>      <div>fa-home</div>           <div>fa-mug-hot</div>
+      <div>trophy</div>    <div>fa-trophy</div>         <div>fa-award</div>
+      <div>flag</div>      <div>fa-flag</div>           <div>fa-flag-checkered</div>
+      <div>book</div>      <div>fa-book</div>           <div>fa-scroll</div>
+      <div>cog</div>       <div>fa-cog</div>            <div>fa-sliders</div>
+      <div>user</div>      <div>fa-user</div>           <div>fa-user-tie</div>
+      <div>sign-in</div>   <div>fa-sign-in-alt</div>    <div>fa-door-open</div>
+      <div>map-pin</div>   <div>fa-map-marker-alt</div> <div>fa-location-dot</div>
+      <div>clock</div>     <div>fas fa-clock</div>      <div>far fa-clock</div>
+      <div>hourglass</div> <div>fa-hourglass-half</div> <div>far fa-hourglass</div>
+      <div>stopwatch</div> <div>fa-stopwatch</div>      <div>fa-mug-saucer</div>
+      <div>edit</div>      <div>fa-edit</div>           <div>fa-pen-nib</div>
+      <div>users</div>     <div>fa-users</div>          <div>fa-people-group</div>
+      <div>chevron</div>   <div>fa-chevron-down</div>   <div>fa-angle-down</div>
+    </div>
+  </div>
+
+  <p style="font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--text-muted); margin-top: 14px;">
+    Impl. note · in React, branch on the palette prop:
+    <code style="background: var(--bg-secondary); padding: 1px 5px; border-radius: 3px;">
+      &lt;i className={palette === 'clubhouse' ? 'fas fa-mug-hot' : 'fas fa-home'} /&gt;
+    </code>
+    — or expose a tiny <code>icon(slot)</code> helper that reads <code>document.body.classList.contains('clubhouse')</code>.
+  </p>
+</div></body></html>

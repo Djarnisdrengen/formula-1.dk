@@ -1,0 +1,289 @@
+/* ============================================================
+   Wireframe stylesheet
+   Low-fi · grayscale paper · hand-sketched feel · one red accent
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Special+Elite&display=swap');
+
+:root {
+    --sketch-font: 'Patrick Hand', 'Comic Sans MS', sans-serif;
+    --paper: #f6f1e3;     /* warm cream sketchbook paper */
+    --paper-2: #ece5d2;
+    --paper-3: #e1d7bd;
+    --ink: #1f1a14;       /* dark warm ink */
+    --ink-2: #5a4f44;     /* mid */
+    --ink-3: #8a7e6e;     /* hairline / placeholder */
+    --accent: #c0241d;    /* one allowed color — primary actions only */
+}
+
+/* Font tweak — body class swaps the family */
+body.font-elite { --sketch-font: 'Special Elite', monospace; }
+/* Special Elite runs wide; pull big sizes back a hair so layouts don't blow up */
+body.font-elite .wf-title { letter-spacing: -0.02em; }
+
+html, body {
+    margin: 0; padding: 0;
+    font-family: var(--sketch-font);
+    color: var(--ink);
+    background: #2a2520; /* dark wood for canvas around artboards */
+}
+
+/* ----- Labels & text ---- */
+.wf-label {
+    font-family: var(--sketch-font);
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+.wf-title {
+    font-family: var(--sketch-font);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+}
+.wf-note {
+    font-family: var(--sketch-font);
+    font-size: 11px;
+    color: var(--ink-3);
+    font-style: italic;
+    line-height: 1.4;
+}
+.wf-divider {
+    border-top: 1.5px dashed var(--ink-3);
+    width: 100%;
+    margin: 6px 0;
+}
+
+/* ----- Common atoms ----- */
+.wf-pill {
+    display: inline-flex; align-items: center;
+    padding: 2px 9px;
+    border: 1.5px solid var(--ink-2);
+    border-radius: 999px;
+    background: transparent;
+    font-family: var(--sketch-font);
+    font-size: 11px;
+    color: var(--ink-2);
+    font-weight: 600;
+    line-height: 1.4;
+}
+.wf-pill.accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper);
+}
+.wf-iconbtn {
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--ink-2);
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sketch-font);
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.wf-iconbtn.accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper);
+}
+.wf-cta {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 12px 18px;
+    border: 1.5px solid var(--ink-2);
+    border-radius: 8px;
+    font-family: var(--sketch-font);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    background: transparent;
+}
+.wf-cta.fill {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper);
+}
+.wf-avatar {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: var(--paper-3);
+    border: 1.5px solid var(--ink-2);
+    color: var(--ink);
+    font-family: var(--sketch-font);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ----- Page artboard ----- */
+.wf-page {
+    background: var(--paper);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 2px 0 var(--ink-3);
+    display: flex; flex-direction: column;
+}
+.wf-page-label {
+    font-family: var(--sketch-font);
+    font-size: 12px;
+    color: var(--ink-3);
+    padding: 8px 14px;
+    border-bottom: 1px dashed var(--ink-3);
+    letter-spacing: 0.05em;
+}
+
+/* ----- Shell: top bar / bottom bar / drawer ----- */
+.wf-shell-top {
+    box-sizing: border-box;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--paper-2);
+    border-bottom: 1.5px dashed var(--ink-3);
+    border-radius: 18px 18px 0 0;
+}
+.wf-shell-bottom {
+    box-sizing: border-box;
+    display: flex; align-items: center; justify-content: space-around;
+    gap: 12px;
+    padding: 8px 12px 10px;
+    background: var(--paper-2);
+    border-top: 1.5px dashed var(--ink-3);
+    border-radius: 0 0 18px 18px;
+}
+.wf-bbar-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.wf-drawer {
+    box-sizing: border-box;
+    background: var(--paper-3);
+    border-bottom: 1.5px dashed var(--ink-3);
+    padding: 8px 0;
+    display: flex; flex-direction: column;
+}
+.wf-drawer-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 18px;
+    position: relative;
+    font-family: var(--sketch-font);
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 600;
+}
+.wf-drawer-row.active {
+    background: rgba(192, 36, 29, 0.08);
+}
+.wf-drawer-row .wf-drawer-icon {
+    font-size: 18px; width: 22px; text-align: center; color: var(--ink-2);
+}
+.wf-drawer-row.active .wf-drawer-icon { color: var(--accent); }
+.wf-drawer-rule {
+    position: absolute; right: 0; top: 0; bottom: 0;
+    width: 3px; background: var(--accent);
+}
+
+/* ----- Rows used across pages ----- */
+.wf-row, .wf-rowflat, .wf-selfrow {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border: 1.5px dashed var(--ink-3);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.3);
+}
+.wf-rowflat {
+    border: none;
+    border-bottom: 1px dashed var(--ink-3);
+    border-radius: 0;
+    background: transparent;
+    padding: 8px 0;
+}
+.wf-selfrow {
+    background: rgba(192, 36, 29, 0.08);
+    border-color: var(--accent);
+}
+.wf-rank {
+    width: 28px; height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--ink-2);
+    border-radius: 6px;
+    background: var(--paper);
+    font-family: var(--sketch-font);
+    font-weight: 800; font-size: 13px;
+    flex-shrink: 0;
+}
+.wf-racecard {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border: 1.5px dashed var(--ink-3);
+    border-radius: 8px;
+}
+.wf-racenum {
+    width: 36px; height: 36px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--ink-2);
+    border-radius: 50%;
+    background: var(--paper);
+    font-family: var(--sketch-font);
+    font-weight: 800; font-size: 13px;
+}
+.wf-podium {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 10px 0;
+    border: 1.5px dashed var(--ink-3);
+    border-radius: 8px;
+    background: var(--paper);
+}
+.wf-podium-pos {
+    font-family: var(--sketch-font);
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+}
+.wf-stat {
+    padding: 12px 8px;
+    border: 1.5px dashed var(--ink-3);
+    border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: rgba(255,255,255,0.3);
+}
+
+/* ----- Admin tabs ----- */
+.wf-tab {
+    padding: 8px 12px;
+    font-family: var(--sketch-font);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+.wf-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+/* ----- Breakpoint table ----- */
+.wf-bprow {
+    display: grid;
+    grid-template-columns: 60px 130px 1fr 1.6fr;
+    gap: 14px;
+    padding: 10px 14px;
+    border-bottom: 1.5px dashed var(--ink-3);
+    font-family: var(--sketch-font);
+    font-size: 13px;
+    color: var(--ink);
+}
+.wf-bprow:last-child { border-bottom: none; }
+.wf-bprow.head {
+    background: var(--paper-3);
+    font-weight: 700;
+    color: var(--ink-2);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* ----- Canvas overrides — make the design_canvas chrome legible on dark wood ----- */
+.dc-canvas { background: #2a2520 !important; }
+.dc-section-title, .dc-artboard-label { color: var(--paper) !important; font-family: var(--sketch-font) !important; }

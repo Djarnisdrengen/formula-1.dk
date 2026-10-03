@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css"><style>
+.headers { display:flex; gap:12px; align-items:stretch; }
+.header-mock {
+  flex: 1;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 14px;
+  border: 1px solid var(--border-color);
+}
+.header-mock img {
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.header-mock .wmwrap { display:flex; align-items:baseline; gap: 6px; }
+.header-mock .wm { font-family:var(--font-display); font-weight:700; font-size:14px; letter-spacing:-0.01em; line-height:1; }
+.header-mock .yr { font-family:var(--font-display); font-size:9px; font-weight:500; color: var(--text-muted); line-height:1; letter-spacing:0.04em; }
+.dark-mock  { background:#131316; color:#f5f5f7; border-color:#34343a; }
+.light-mock { background:#e3e3e7; color:#18181b; border-color:#b3b3b8; }
+.light-mock .yr { color:#66666b; }
+</style></head>
+<body class="dark"><div class="card-frame">
+  <div class="label-tiny">Header lockup · two themes</div>
+  <div class="headers">
+    <div class="header-mock dark-mock">
+      <img src="../assets/logo.svg" alt=""><span class="wmwrap"><span class="wm">Formel 1 Klub</span><span class="yr">2026</span></span>
+    </div>
+    <div class="header-mock light-mock">
+      <img src="../assets/logo.svg" alt=""><span class="wmwrap"><span class="wm">Formel 1 Klub</span><span class="yr">2026</span></span>
+    </div>
+  </div>
+</div></body></html>

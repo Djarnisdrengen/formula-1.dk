@@ -1,0 +1,27 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css"><style>
+.btn.hover { background: var(--f1-red-light); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(225, 6, 0, 0.30); }
+.btn.sec-hover { background: var(--bg-hover); }
+.cap { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+.col-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+</style></head>
+<body class="dark"><div class="card-frame">
+  <div class="label-tiny">Hover states · lift + red-tinted shadow</div>
+  <div class="row" style="gap: 28px">
+    <div class="col-item">
+      <button class="btn btn-primary">Place Bet</button>
+      <span class="cap">rest</span>
+    </div>
+    <div class="col-item">
+      <button class="btn btn-primary hover">Place Bet</button>
+      <span class="cap">hover · -1px · shadow</span>
+    </div>
+    <div class="col-item">
+      <button class="btn btn-secondary">Edit</button>
+      <span class="cap">rest</span>
+    </div>
+    <div class="col-item">
+      <button class="btn btn-secondary sec-hover">Edit</button>
+      <span class="cap">hover · bg-hover</span>
+    </div>
+  </div>
+</div></body></html>

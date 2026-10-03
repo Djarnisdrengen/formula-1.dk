@@ -1,0 +1,48 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css"><style>
+  .form-stack { display: flex; flex-direction: column; gap: 20px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .input {
+    width: 100%; box-sizing: border-box;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color); border-radius: 8px;
+    background: var(--bg-secondary); color: var(--text-primary);
+    font-size: 14px; font-family: var(--font-body);
+  }
+  .input.focused {
+    outline: none; border-color: var(--f1-red);
+    box-shadow: 0 0 0 3px rgba(225, 6, 0, 0.2);
+  }
+  .input.error {
+    border-color: #c92a2a;
+    box-shadow: 0 0 0 3px rgba(201, 42, 42, 0.18);
+  }
+  .input[disabled] { opacity: 0.55; cursor: not-allowed; }
+  .label {
+    font-weight: 500; color: var(--text-secondary);
+    font-size: 13px; letter-spacing: 0.01em;
+  }
+  .help { font-size: 12px; color: var(--text-muted); }
+  .help.err { color: #ff6b6b; }
+</style></head>
+<body class="dark"><div class="card-frame">
+  <div class="label-tiny">Form input · states</div>
+  <div class="form-stack">
+    <div class="field">
+      <label class="label">Email · rest</label>
+      <input class="input" type="email" placeholder="navn@klubben.dk" value="ole.h@klubben.dk">
+    </div>
+    <div class="field">
+      <label class="label">Password · focused</label>
+      <input class="input focused" type="password" value="••••••••">
+    </div>
+    <div class="field">
+      <label class="label">Email · error</label>
+      <input class="input error" type="email" value="ikke en email">
+      <span class="help err">Indtast en gyldig email-adresse</span>
+    </div>
+    <div class="field">
+      <label class="label">Klub-ID · disabled</label>
+      <input class="input" type="text" value="FRD-2026-0142" disabled>
+    </div>
+  </div>
+</div></body></html>

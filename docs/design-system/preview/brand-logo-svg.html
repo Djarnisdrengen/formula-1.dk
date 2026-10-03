@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Brand · Logo (vector)</title>
+<link rel="stylesheet" href="../colors_and_type.css" />
+<link rel="stylesheet" href="_card.css" />
+<style>
+  .variants {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .pane {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 28px 24px 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 140px;
+    gap: 12px;
+  }
+  .pane.dark    { background: #131316; }
+  .pane.light   { background: #e3e3e7; }
+  .pane.black   { background: #000000; }
+  .pane.white   { background: #ffffff; }
+  .pane object { width: 100%; max-width: 320px; height: auto; display:block; }
+  .pane figcaption {
+    font-family: var(--font-mono); font-size: 10px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .pane.light figcaption, .pane.white figcaption { color: rgba(0,0,0,0.55); }
+
+  .scale-row {
+    margin-top: 18px;
+    display: flex; gap: 24px; align-items: center;
+    padding: 16px 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+  }
+  .scale-row svg, .scale-row object { display: block; }
+  .scale-row figcaption {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--text-muted); text-align: center;
+    margin-top: 6px; letter-spacing: 0.04em;
+  }
+
+  .files {
+    margin-top: 16px;
+    display: flex; gap: 32px; flex-wrap: wrap;
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--text-muted);
+  }
+  .files strong { color: var(--text-primary); font-weight: 600; }
+</style>
+</head>
+<body class="dark">
+<article class="ds-card">
+  <header class="ds-card-h">
+    <h1>Brand mark — vector</h1>
+    <p>Traced from <code>assets/logo.png</code> via contour following + Chaikin smoothing. Three drop-in variants share one viewBox <code>0 0 951 189</code>.</p>
+  </header>
+
+  <div class="variants">
+    <div class="pane dark">
+      <object data="../assets/logo.svg" type="image/svg+xml" aria-label="Brand logo on dark"></object>
+      <figcaption>Primary · red + white · on dark</figcaption>
+    </div>
+    <div class="pane light">
+      <object data="../assets/logo.svg" type="image/svg+xml" aria-label="Brand logo on light"></object>
+      <figcaption>Primary · red + white · on light</figcaption>
+    </div>
+    <div class="pane white">
+      <object data="../assets/logo-bw.svg" type="image/svg+xml" aria-label="Black silhouette on white"></object>
+      <figcaption>Mono · black silhouette on white</figcaption>
+    </div>
+    <div class="pane black">
+      <object data="../assets/logo-wb.svg" type="image/svg+xml" aria-label="White silhouette on black"></object>
+      <figcaption>Mono · white silhouette on black</figcaption>
+    </div>
+  </div>
+
+  <div class="scale-row">
+    <figure>
+      <object data="../assets/logo.svg" type="image/svg+xml" style="width:200px;height:40px"></object>
+      <figcaption>200 × 40 · header</figcaption>
+    </figure>
+    <figure>
+      <object data="../assets/logo.svg" type="image/svg+xml" style="width:140px;height:28px"></object>
+      <figcaption>140 × 28 · inline</figcaption>
+    </figure>
+    <figure>
+      <object data="../assets/logo.svg" type="image/svg+xml" style="width:100px;height:20px"></object>
+      <figcaption>100 × 20 · favicon strip</figcaption>
+    </figure>
+    <figure>
+      <object data="../assets/logo.svg" type="image/svg+xml" style="width:60px;height:12px"></object>
+      <figcaption>60 × 12 · footer</figcaption>
+    </figure>
+  </div>
+
+  <div class="scale-row" style="background:#ffffff;">
+    <figure>
+      <object data="../assets/logo-bw.svg" type="image/svg+xml" style="width:200px;height:40px"></object>
+      <figcaption style="color:#666;">200 × 40 · header</figcaption>
+    </figure>
+    <figure>
+      <object data="../assets/logo-bw.svg" type="image/svg+xml" style="width:140px;height:28px"></object>
+      <figcaption style="color:#666;">140 × 28 · inline</figcaption>
+    </figure>
+    <figure>
+      <object data="../assets/logo-bw.svg" type="image/svg+xml" style="width:100px;height:20px"></object>
+      <figcaption style="color:#666;">100 × 20 · favicon strip</figcaption>
+    </figure>
+    <figure>
+      <object data="../assets/logo-bw.svg" type="image/svg+xml" style="width:60px;height:12px"></object>
+      <figcaption style="color:#666;">60 × 12 · footer</figcaption>
+    </figure>
+  </div>
+
+  <div class="scale-row" style="background:#000000;">
+    <figure>
+      <object data="../assets/logo-wb.svg" type="image/svg+xml" style="width:200px;height:40px"></object>
+      <figcaption style="color:#aaa;">200 × 40 · header</figcaption>
+    </figure>
+    <figure>
+      <object data="../assets/logo-wb.svg" type="image/svg+xml" style="width:140px;height:28px"></object>
+      <figcaption style="color:#aaa;">140 × 28 · inline</figcaption>
+    </figure>
+    <figure>
+      <object data="../assets/logo-wb.svg" type="image/svg+xml" style="width:100px;height:20px"></object>
+      <figcaption style="color:#aaa;">100 × 20 · favicon strip</figcaption>
+    </figure>
+    <figure>
+      <object data="../assets/logo-wb.svg" type="image/svg+xml" style="width:60px;height:12px"></object>
+      <figcaption style="color:#aaa;">60 × 12 · footer</figcaption>
+    </figure>
+  </div>
+
+  <div class="files">
+    <span>primary <strong>assets/logo.svg</strong></span>
+    <span>mono BW <strong>assets/logo-bw.svg</strong></span>
+    <span>mono WB <strong>assets/logo-wb.svg</strong></span>
+    <span>viewBox <strong>0 0 951 189</strong> · aspect <strong>5.03 : 1</strong></span>
+  </div>
+</article>
+</body>
+</html>

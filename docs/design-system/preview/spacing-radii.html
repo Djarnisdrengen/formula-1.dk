@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css"><style>
+.radii { display:flex; gap:14px; align-items:flex-end; }
+.r { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.box { width: 80px; height: 64px; background: var(--bg-card); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-weight: 700; color: var(--text-secondary); font-size: 14px; }
+.name { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--text-muted); }
+</style></head>
+<body class="dark"><div class="card-frame">
+  <div class="label-tiny">Corner radii</div>
+  <div class="radii">
+    <div class="r"><div class="box" style="border-radius:6px">6</div><span class="name">sm · chips</span></div>
+    <div class="r"><div class="box" style="border-radius:8px">8</div><span class="name">md · btn / input</span></div>
+    <div class="r"><div class="box" style="border-radius:12px">12</div><span class="name">lg · cards</span></div>
+    <div class="r"><div class="box" style="border-radius:16px">16</div><span class="name">xl · hero / modal</span></div>
+    <div class="r"><div class="box" style="border-radius:9999px">∞</div><span class="name">pill · badges</span></div>
+    <div class="r"><div class="box" style="border-radius:50%; width:64px">●</div><span class="name">50% · avatar</span></div>
+  </div>
+</div></body></html>

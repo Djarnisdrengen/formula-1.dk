@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css"><style>
+.shadows { display: flex; gap: 28px; padding: 12px 4px 24px; }
+.s { width: 160px; height: 90px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--text-primary); }
+.s1 { box-shadow: 0 4px 12px rgba(225, 6, 0, 0.30); }
+.s2 { box-shadow: 0 8px 24px rgba(225, 6, 0, 0.15); border-color: var(--f1-red); }
+.s3 { box-shadow: 0 0 20px rgba(251, 191, 36, 0.40); border-color: #fbbf24; }
+.cap { display: block; font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--text-muted); margin-top: 8px; text-align: center; }
+</style></head>
+<body class="dark"><div class="card-frame">
+  <div class="label-tiny">Shadow system · three colored shadows, no neutral</div>
+  <div class="shadows">
+    <div>
+      <div class="s s1">Button hover</div>
+      <span class="cap">0 4 12 · red 30%</span>
+    </div>
+    <div>
+      <div class="s s2">Card hover</div>
+      <span class="cap">0 8 24 · red 15%</span>
+    </div>
+    <div>
+      <div class="s s3">Perfect bet</div>
+      <span class="cap">0 0 20 · gold 40%</span>
+    </div>
+  </div>
+</div></body></html>

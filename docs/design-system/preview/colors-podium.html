@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css"><style>
+.podium-row { display: flex; gap: 16px; align-items: flex-end; }
+.podium-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pillar { width: 72px; border-radius: 8px 8px 0 0; }
+.p1 .pillar { background: linear-gradient(135deg, #fbbf24, #f59e0b); height: 90px; }
+.p2 .pillar { background: linear-gradient(135deg, #9ca3af, #6b7280); height: 70px; }
+.p3 .pillar { background: linear-gradient(135deg, #cd7c2f, #a15c1d); height: 56px; }
+.pname { font-family: var(--font-display); font-size: 11px; font-weight: 700; }
+.phex { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--text-muted); }
+</style></head>
+<body class="dark"><div class="card-frame">
+  <div class="label-tiny">Podium colors · gold / silver / bronze (135° gradient)</div>
+  <div class="podium-row">
+    <div class="podium-col p2">
+      <span class="position-badge position-2">2</span>
+      <div class="pillar"></div>
+      <span class="pname">Silver</span>
+      <span class="phex">#9ca3af → #6b7280</span>
+    </div>
+    <div class="podium-col p1">
+      <span class="position-badge position-1">1</span>
+      <div class="pillar"></div>
+      <span class="pname">Gold</span>
+      <span class="phex">#fbbf24 → #f59e0b</span>
+    </div>
+    <div class="podium-col p3">
+      <span class="position-badge position-3">3</span>
+      <div class="pillar"></div>
+      <span class="pname">Bronze</span>
+      <span class="phex">#cd7c2f → #a15c1d</span>
+    </div>
+  </div>
+</div></body></html>

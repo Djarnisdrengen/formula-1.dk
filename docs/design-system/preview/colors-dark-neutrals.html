@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css"><style>
+.row { gap: 0; }
+.swatch { border-radius: 0; border: none; width: 130px; height: 100px; }
+.swatch:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+.swatch:last-child  { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+.s1 { background: #131316; }
+.s2 { background: #1c1c20; }
+.s3 { background: #232328; }
+.s4 { background: #2d2d33; }
+.s5 { background: #34343a; }
+.t1 { color: #f5f5f7; }
+.t2 { color: #b8b8be; }
+.t3 { color: #8e8e95; }
+.text-row { display:flex; gap: 18px; align-items: baseline; }
+.text-row span { font-family: var(--font-body); font-weight: 500; }
+</style></head>
+<body class="dark"><div class="card-frame">
+  <div class="label-tiny">Dark theme · background &amp; text ramps</div>
+  <div class="row">
+    <div class="swatch s1 t1">bg-primary<span class="hex">#131316</span></div>
+    <div class="swatch s2 t1">bg-secondary<span class="hex">#1c1c20</span></div>
+    <div class="swatch s3 t1">bg-card<span class="hex">#232328</span></div>
+    <div class="swatch s4 t1">bg-hover<span class="hex">#2d2d33</span></div>
+    <div class="swatch s5 t1">border<span class="hex">#34343a</span></div>
+  </div>
+  <div class="text-row">
+    <span class="t1">Aa text-primary</span>
+    <span class="t2">Aa text-secondary</span>
+    <span class="t3">Aa text-muted</span>
+  </div>
+</div></body></html>

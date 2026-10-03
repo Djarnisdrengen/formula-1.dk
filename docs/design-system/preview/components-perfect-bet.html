@@ -1,0 +1,40 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css"><style>
+.bet-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 1rem; background: var(--bg-secondary);
+    border: 2px solid var(--f1-red); border-radius: 8px;
+    background: linear-gradient(90deg, rgba(225, 6, 0, 0.15), var(--bg-secondary));
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.40);
+}
+.bet-user { display:flex; align-items:center; gap: 12px; }
+.bet-avatar { width: 36px; height: 36px; background: var(--f1-red); color: white; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-weight: 700; box-shadow: 0 0 0 3px rgba(225, 6, 0, 0.3); }
+.name-row { display:flex; align-items:center; gap: 8px; }
+.you { background: var(--f1-red); color: white; font-size: 10px; padding: 2px 6px; border-radius: 9999px; font-weight: 800; font-family: var(--font-display); letter-spacing: 0.05em; }
+.star { color: #fbbf24; font-weight: 700; animation: star-pulse 2s ease-in-out infinite; }
+@keyframes star-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+.preds { display:flex; gap: 6px; }
+.pred { padding: 4px 8px; background: var(--bg-card); border-radius: 4px; font-size: 12px; font-weight: 500; }
+.timestamp { display:block; color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+</style></head>
+<body class="dark"><div class="card-frame">
+  <div class="label-tiny">Perfect bet · gold glow + ★ animation</div>
+  <div class="bet-item">
+    <div class="bet-user">
+      <div class="bet-avatar">O</div>
+      <div>
+        <div class="name-row">
+          <strong style="font-family:var(--font-display);font-size:14px">Ole H.</strong>
+          <span class="you">YOU</span>
+          <span class="star">★</span>
+          <span class="badge position-1" style="font-size:10px; padding: 2px 8px">48 pts</span>
+        </div>
+        <span class="timestamp">24 May 16:31</span>
+      </div>
+    </div>
+    <div class="preds">
+      <span class="pred"><b>P1:</b> Verstappen</span>
+      <span class="pred"><b>P2:</b> Norris</span>
+      <span class="pred"><b>P3:</b> Leclerc</span>
+    </div>
+  </div>
+</div></body></html>

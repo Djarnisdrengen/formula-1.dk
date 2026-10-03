@@ -1,0 +1,19 @@
+{
+  "name": "f1-rag-intelligence",
+  "version": "1.0.0",
+  "description": "RAG system for F1 racing intelligence in Paddock Picks",
+  "type": "module",
+  "scripts": {
+    "build-index": "node build-index.js",
+    "query": "node query.js",
+    "api": "node api-server.js",
+    "dev": "node --watch api-server.js"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {},
+  "author": "Paddock Picks",
+  "license": "MIT"
+}

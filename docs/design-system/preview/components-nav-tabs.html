@@ -1,0 +1,41 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css"><style>
+.nav { display: flex; align-items: center; gap: 28px; background: var(--bg-secondary); padding: 14px 20px; border-radius: 10px; border-bottom: 1px solid var(--border-color); }
+.nl { color: var(--text-secondary); font-weight: 500; font-size: 14px; padding: 6px 0; position: relative; }
+.nl:hover { color: var(--text-primary); }
+.nl.active { color: var(--text-primary); }
+.nl.active::after { content:""; position:absolute; left:0; right:0; bottom:-15px; height: 2px; background: var(--f1-red); border-radius: 1px; }
+.tabs { display:flex; gap: 8px; border-bottom: 1px solid var(--border-color); margin-top: 10px; padding: 0 4px; }
+.tab {
+  padding: 10px 16px;
+  color: var(--text-secondary);
+  font-weight: 500; font-size: 14px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  border-radius: 6px 6px 0 0;
+}
+.tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-bottom-color: var(--border-color);
+}
+.tab.active { color: var(--f1-red); border-bottom-color: var(--f1-red); background: transparent; }
+.tab.active:hover { color: var(--f1-red); background: rgba(225, 6, 0, 0.08); border-bottom-color: var(--f1-red); }
+</style></head>
+<body class="dark"><div class="card-frame">
+  <div class="nav">
+    <span class="nl">Hjem</span>
+    <span class="nl active">Løb</span>
+    <span class="nl">Rangliste</span>
+    <span class="nl">Regler</span>
+  </div>
+  <div class="tabs">
+    <span class="tab active">Drivers</span>
+    <span class="tab">Races</span>
+    <span class="tab">Users</span>
+    <span class="tab">Settings</span>
+  </div>
+  <div style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--text-muted); margin-top: 10px;">
+    Hover any admin tab to see the state · 150ms ease
+  </div>
+</div></body></html>

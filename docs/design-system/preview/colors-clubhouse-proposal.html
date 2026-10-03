@@ -1,0 +1,293 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Clubhouse palette · proposal</title>
+<link rel="stylesheet" href="../colors_and_type.css" />
+<link rel="stylesheet" href="_card.css" />
+<style>
+  /* ---- Proposed clubhouse tokens (overrides) ---- */
+  .clubhouse {
+    --c-cream:        #f3ecdc;  /* warm paper — page bg light */
+    --c-cream-deep:   #e8dfc8;
+    --c-paddock:      #1f1a14;  /* deep warm charcoal — page bg dark */
+    --c-paddock-2:    #2a241b;
+    --c-paddock-3:    #36302a;
+    --c-oxblood:      #8a1f1a;  /* muted brand red, sits warmer with cream */
+    --c-racing-green: #1d3a2a;  /* secondary accent */
+    --c-brass:        #b8893f;  /* podium / star metal */
+    --c-ink:          #2a2520;  /* on-cream text */
+    --c-ink-2:        #5a4f44;
+    --c-paper:        #fbf6ea;  /* card on cream */
+  }
+
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(6, 1fr); }
+  .sw { border-radius: 10px; padding: 14px; min-height: 96px; display:flex; flex-direction:column; justify-content:space-between; border: 1px solid rgba(0,0,0,.08); }
+  .sw .nm { font-family: var(--font-display); font-weight: 700; font-size: 13px; letter-spacing:-0.01em; }
+  .sw .hx { font-family: ui-monospace, Menlo, monospace; font-size: 11px; opacity: 0.7; }
+  .sw.on-dark { color: #fbf6ea; }
+  .sw.on-light { color: #2a2520; }
+
+  /* ---- Tone & voice card ---- */
+  .tone {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    margin-top: 22px;
+  }
+  .tonebox {
+    border-radius: 12px; padding: 18px 20px;
+    border: 1px solid var(--border-color);
+  }
+  .tonebox h3 {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;
+    margin: 0 0 12px; color: var(--text-muted);
+  }
+  .tonebox .row { display:flex; gap: 10px; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); align-items:flex-start; font-size: 13px; line-height: 1.45; }
+  .tonebox .row:last-child { border: none; }
+  .tonebox .row .k { font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; min-width: 64px; padding-top: 2px; }
+  .tone .now    { background: var(--bg-card); color: var(--text-primary); }
+  .tone .now .k { color: var(--text-muted); }
+  .tone .prop   { background: var(--c-paddock-2); border-color: var(--c-paddock-3); color: #f3ecdc; }
+  .tone .prop .row { border-color: rgba(243,236,220,0.12); }
+  .tone .prop .k { color: var(--c-brass); }
+
+  /* ---- Mocked surfaces ---- */
+  .mocks { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 22px; }
+  .mock {
+    border-radius: 14px; overflow: hidden; border: 1px solid var(--border-color);
+    display: flex; flex-direction: column;
+  }
+  .mock-h {
+    padding: 14px 18px; font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted);
+    background: var(--bg-secondary); border-bottom: 1px solid var(--border-color);
+  }
+  .mock-b { padding: 22px 20px; }
+
+  .mock.cream { background: var(--c-cream); color: var(--c-ink); }
+  .mock.cream .mock-h { background: var(--c-cream-deep); color: var(--c-ink-2); border-bottom-color: rgba(0,0,0,.08); }
+  .mock.paddock { background: var(--c-paddock); color: #f3ecdc; }
+  .mock.paddock .mock-h { background: var(--c-paddock-2); color: rgba(243,236,220,0.6); border-bottom-color: var(--c-paddock-3); }
+
+  /* Faux header lockup */
+  .ch-header { display:flex; align-items:center; gap: 14px; padding: 4px 0 18px; }
+  .ch-header .badge {
+    width: 36px; height: 36px; border-radius: 50%;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-family: var(--font-display); font-weight: 900; font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+  .ch-header .wm { font-family: var(--font-display); font-weight: 800; font-size: 16px; letter-spacing: -0.01em; }
+  .ch-header .yr { font-family: var(--font-display); font-size: 9px; font-weight: 500; letter-spacing: 0.06em; opacity: 0.7; margin-left: 2px; align-self: flex-end; padding-bottom: 4px; }
+
+  .cream .badge   { background: var(--c-oxblood); color: var(--c-paper); }
+  .paddock .badge { background: var(--c-brass); color: var(--c-paddock); }
+
+  /* Faux leaderboard row */
+  .ch-row {
+    display: grid; grid-template-columns: auto 1fr auto auto; align-items:center; gap: 14px;
+    padding: 12px 14px; border-radius: 10px;
+    background: var(--c-paper); color: var(--c-ink);
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+  .paddock .ch-row { background: var(--c-paddock-2); color: #f3ecdc; border-color: var(--c-paddock-3); }
+  .ch-rank {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--c-oxblood); color: var(--c-paper);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-family: var(--font-display); font-weight: 900; font-size: 13px;
+  }
+  .paddock .ch-rank { background: var(--c-brass); color: var(--c-paddock); }
+  .ch-who strong { font-family: var(--font-display); font-weight: 700; font-size: 14px; display:block; }
+  .ch-who small { font-size: 12px; opacity: 0.65; }
+  .ch-stars {
+    display:inline-flex; align-items:center; gap: 4px;
+    font-family: var(--font-display); font-weight: 800; font-size: 16px;
+    color: var(--c-brass);
+    padding: 5px 11px; border-radius: 999px;
+    background: rgba(184, 137, 63, 0.12);
+    border: 1px solid rgba(184, 137, 63, 0.4);
+  }
+  .ch-pts {
+    font-family: ui-monospace, Menlo, monospace; font-size: 12px;
+    opacity: 0.7; font-variant-numeric: tabular-nums; min-width: 50px; text-align: right;
+  }
+
+  /* Faux quote / hero copy */
+  .ch-quote {
+    margin-top: 14px;
+    font-family: 'Chivo', var(--font-display); font-weight: 700;
+    font-size: 22px; line-height: 1.15; letter-spacing: -0.01em;
+    max-width: 32ch;
+  }
+  .ch-quote em { font-style: italic; color: var(--c-oxblood); font-weight: 800; }
+  .paddock .ch-quote em { color: var(--c-brass); }
+  .ch-sub {
+    margin-top: 8px; font-size: 13px; line-height: 1.5; opacity: 0.78; max-width: 42ch;
+  }
+
+  .ch-cta {
+    display:inline-flex; align-items:center; gap: 6px;
+    margin-top: 16px;
+    padding: 9px 16px; border-radius: 8px;
+    font-family: var(--font-display); font-weight: 700; font-size: 13px;
+    background: var(--c-oxblood); color: var(--c-paper);
+    border: 1px solid var(--c-oxblood);
+  }
+  .paddock .ch-cta { background: var(--c-brass); color: var(--c-paddock); border-color: var(--c-brass); }
+
+  .principles {
+    margin-top: 22px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+  .principle {
+    padding: 14px; border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+  }
+  .principle h4 {
+    font-family: var(--font-display); font-weight: 800; font-size: 13px;
+    margin: 0 0 6px; letter-spacing: -0.005em;
+  }
+  .principle p {
+    margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-secondary);
+  }
+  .principle .n {
+    font-family: var(--font-display); font-weight: 900; font-size: 11px;
+    color: var(--c-brass); letter-spacing: 0.1em; display: block; margin-bottom: 4px;
+  }
+</style>
+</head>
+<body class="dark clubhouse">
+
+<article class="ds-card">
+  <header class="ds-card-h">
+    <h1>Clubhouse palette · proposal</h1>
+    <p>A warmer, less "broadcast" alternative — drops the high-contrast black/red TV look in favour of warm cream paper, deep paddock charcoal, oxblood, racing green, and brass. Reads more like an old motoring-club newsletter than a betting app, but keeps the F1 DNA.</p>
+  </header>
+
+  <div class="grid">
+    <div class="sw on-light" style="background:#f3ecdc"><span class="nm">Cream</span><span class="hx">#f3ecdc</span></div>
+    <div class="sw on-light" style="background:#e8dfc8"><span class="nm">Cream deep</span><span class="hx">#e8dfc8</span></div>
+    <div class="sw on-dark"  style="background:#1f1a14"><span class="nm">Paddock</span><span class="hx">#1f1a14</span></div>
+    <div class="sw on-dark"  style="background:#2a241b"><span class="nm">Paddock 2</span><span class="hx">#2a241b</span></div>
+    <div class="sw on-dark"  style="background:#8a1f1a"><span class="nm">Oxblood</span><span class="hx">#8a1f1a</span></div>
+    <div class="sw on-dark"  style="background:#1d3a2a"><span class="nm">Racing green</span><span class="hx">#1d3a2a</span></div>
+  </div>
+  <div class="grid" style="margin-top:14px; grid-template-columns: repeat(4, 1fr);">
+    <div class="sw on-dark"  style="background:#b8893f"><span class="nm">Brass</span><span class="hx">#b8893f</span></div>
+    <div class="sw on-light" style="background:#fbf6ea"><span class="nm">Paper</span><span class="hx">#fbf6ea</span></div>
+    <div class="sw on-light" style="background:#fbf6ea; color:#2a2520"><span class="nm">Ink</span><span class="hx">#2a2520</span></div>
+    <div class="sw on-light" style="background:#fbf6ea; color:#5a4f44"><span class="nm">Ink-2</span><span class="hx">#5a4f44</span></div>
+  </div>
+
+  <!-- Tone & voice comparison -->
+  <div class="tone">
+    <div class="tonebox now">
+      <h3>Current · Broadcast</h3>
+      <div class="row"><span class="k">Headline</span><span>"Welcome to the F1 Club. Place your bet before lights out."</span></div>
+      <div class="row"><span class="k">CTA</span><span>"PLACE BET"</span></div>
+      <div class="row"><span class="k">Empty</span><span>"No upcoming races"</span></div>
+      <div class="row"><span class="k">Done</span><span>"Race Completed"</span></div>
+      <div class="row"><span class="k">Feel</span><span>Race director on the PA. All caps. Stopwatch energy.</span></div>
+    </div>
+    <div class="tonebox prop">
+      <h3>Proposed · Clubhouse</h3>
+      <div class="row"><span class="k">Headline</span><span>"Søndag igen, drenge. Lægger I et bud før de starter?"</span></div>
+      <div class="row"><span class="k">CTA</span><span>"Læg dit bud"</span></div>
+      <div class="row"><span class="k">Empty</span><span>"Vi venter på næste løb — kaffen er sat over."</span></div>
+      <div class="row"><span class="k">Done</span><span>"Resultatet er inde"</span></div>
+      <div class="row"><span class="k">Feel</span><span>Per from the committee at the Tuesday meeting. Sentence case. Coffee energy.</span></div>
+    </div>
+  </div>
+
+  <!-- Mocked surfaces -->
+  <div class="mocks">
+    <div class="mock cream">
+      <div class="mock-h">Hjemmeside · light (cream paper)</div>
+      <div class="mock-b">
+        <div class="ch-header">
+          <span class="badge">F1</span>
+          <span class="wm">Frederikssund Formel 1 Klub</span>
+          <span class="yr">SÆSON 2026</span>
+        </div>
+        <div class="ch-quote">Søndag igen, drenge. <em>Lægger I et bud</em> før de starter?</div>
+        <div class="ch-sub">Et bud per medlem, point for top-3 — en stjerne hvis du rammer plet. Kaffen er sat over.</div>
+        <a class="ch-cta">Læg dit bud →</a>
+
+        <div style="margin-top:22px; display:flex; flex-direction:column; gap:8px;">
+          <div class="ch-row">
+            <span class="ch-rank">1</span>
+            <div class="ch-who"><strong>Ole H.</strong><small>14 bud · medlem siden 2019</small></div>
+            <span class="ch-stars">★ 3</span>
+            <span class="ch-pts">142 p</span>
+          </div>
+          <div class="ch-row">
+            <span class="ch-rank" style="background:#5a4f44">2</span>
+            <div class="ch-who"><strong>Bjarne K.</strong><small>14 bud</small></div>
+            <span class="ch-stars">★ 1</span>
+            <span class="ch-pts">128 p</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock paddock">
+      <div class="mock-h">Hjemmeside · dark (paddock)</div>
+      <div class="mock-b">
+        <div class="ch-header">
+          <span class="badge">F1</span>
+          <span class="wm">Frederikssund Formel 1 Klub</span>
+          <span class="yr">SÆSON 2026</span>
+        </div>
+        <div class="ch-quote">Monaco i morgen — <em>hvem rammer plet</em> i år?</div>
+        <div class="ch-sub">Buddet lukker et minut før lights out. Vinder du puljen, står Bjarne for at hælde øl op.</div>
+        <a class="ch-cta">Læg dit bud →</a>
+
+        <div style="margin-top:22px; display:flex; flex-direction:column; gap:8px;">
+          <div class="ch-row">
+            <span class="ch-rank">1</span>
+            <div class="ch-who"><strong>Ole H.</strong><small>14 bud · medlem siden 2019</small></div>
+            <span class="ch-stars">★ 3</span>
+            <span class="ch-pts">142 p</span>
+          </div>
+          <div class="ch-row">
+            <span class="ch-rank" style="background:#5a4f44;color:#f3ecdc">2</span>
+            <div class="ch-who"><strong>Bjarne K.</strong><small>14 bud</small></div>
+            <span class="ch-stars">★ 1</span>
+            <span class="ch-pts">128 p</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="principles">
+    <div class="principle">
+      <span class="n">01</span>
+      <h4>Warm paper, not black</h4>
+      <p>Default light theme is cream, not white. It softens the screen and signals "newsletter from the committee" instead of "live broadcast".</p>
+    </div>
+    <div class="principle">
+      <span class="n">02</span>
+      <h4>Oxblood, not signal red</h4>
+      <p>Brand red dialled from #E10600 to #8A1F1A — still unmistakably F1, but reads as a club crest, not a hazard light.</p>
+    </div>
+    <div class="principle">
+      <span class="n">03</span>
+      <h4>Brass for stars</h4>
+      <p>Stars are the prized metric. Brass (#B8893F) gives them a trophy feel — the same warmth you'd see engraved on a wooden honours board.</p>
+    </div>
+    <div class="principle">
+      <span class="n">04</span>
+      <h4>Sentence case, Danish first</h4>
+      <p>Buttons and labels in sentence case. Copy written like Per is in the room, not like the chief race director is on the PA.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:18px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--text-muted);">
+    Proposal · keep current tokens as the default and ship clubhouse as a Tweaks-togglable theme · 4 new color tokens, ~25 string rewrites
+  </div>
+</article>
+</body>
+</html>

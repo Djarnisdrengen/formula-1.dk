@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Wireframe font samples</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Patrick+Hand&family=Caveat:wght@500;700&family=Special+Elite&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f1e3;
+    --paper-2: #ece5d2;
+    --ink: #1f1a14;
+    --ink-2: #5a4f44;
+    --ink-3: #8a7e6e;
+    --accent: #c0241d;
+  }
+  html, body { margin: 0; padding: 0; background: #2a2520; color: var(--ink); }
+  .wrap {
+    max-width: 1100px;
+    margin: 28px auto;
+    padding: 0 24px;
+    font-family: 'Patrick Hand', sans-serif;
+    color: var(--paper);
+  }
+  h1 {
+    font-family: 'Patrick Hand', sans-serif;
+    color: var(--paper);
+    font-size: 28px;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .lede {
+    color: rgba(246, 241, 227, 0.7);
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 60ch;
+    margin: 0 0 24px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .card {
+    background: var(--paper);
+    border-radius: 14px;
+    box-shadow: 0 2px 0 var(--ink-3);
+    overflow: hidden;
+    color: var(--ink);
+  }
+  .card-head {
+    background: var(--paper-2);
+    padding: 12px 18px;
+    border-bottom: 1.5px dashed var(--ink-3);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .card-head .name {
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .card-body { padding: 18px 22px 22px; }
+
+  /* Type slots — same content, different font per card */
+  .title  { font-weight: 700; line-height: 1.05; letter-spacing: -0.01em; font-size: 30px; }
+  .h2     { font-weight: 700; font-size: 18px; margin-top: 14px; }
+  .body   { font-size: 14px; line-height: 1.5; color: var(--ink-2); margin-top: 8px; }
+  .label  { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-3); margin-top: 16px; }
+  .row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; margin-top: 8px;
+    border: 1.5px dashed var(--ink-3);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.3);
+  }
+  .row .rank {
+    width: 28px; height: 28px;
+    border: 1.5px solid var(--ink-2);
+    border-radius: 6px;
+    background: var(--paper);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px;
+  }
+  .row .who { flex: 1; font-size: 14px; font-weight: 600; }
+  .row .pts { font-weight: 700; font-size: 13px; }
+  .pill {
+    display: inline-flex; align-items: center;
+    padding: 2px 9px;
+    border: 1.5px solid var(--accent);
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--paper);
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 12px;
+  }
+  .cta {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 10px 16px;
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--paper);
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 14px;
+  }
+  .compact {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .compact span b { color: var(--ink); font-weight: 700; }
+
+  .kalam   { font-family: 'Kalam', sans-serif; }
+  .patrick { font-family: 'Patrick Hand', sans-serif; }
+  .caveat  { font-family: 'Caveat', cursive; }
+  .elite   { font-family: 'Special Elite', monospace; }
+
+  /* Caveat needs a slight size bump — it runs small/narrow */
+  .caveat .title { font-size: 36px; }
+  .caveat .h2    { font-size: 22px; }
+  .caveat .body  { font-size: 16px; }
+  /* Special Elite needs a slight reduction — it runs wide */
+  .elite  .title { font-size: 26px; letter-spacing: -0.02em; }
+  .elite  .body  { font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Wireframe font samples · same content, 4 fonts</h1>
+  <p class="lede">All four are free Google Fonts. Each card uses the font for everything (title, body, UI labels, buttons) so you can judge how it feels across the whole interface — not just headings.</p>
+
+  <div class="grid">
+
+    <!-- 1 · Kalam ============================================== -->
+    <div class="card kalam">
+      <div class="card-head">
+        <span class="name">1 · Kalam</span>
+        <span>clean handwriting · most neutral</span>
+      </div>
+      <div class="card-body">
+        <div class="title">Monaco Grand Prix</div>
+        <div class="pill">Næste løb</div>
+        <div class="body">Søndag 26. maj · 15:00 · Søndag igen, drenge. Lægger I et bud før de starter?</div>
+        <div class="cta">Læg dit bud</div>
+
+        <div class="h2">Rangliste · top 3</div>
+        <div class="row"><span class="rank">1</span><span class="who">Ole H.</span><span class="pts">142p</span></div>
+        <div class="row"><span class="rank">2</span><span class="who">Bjarne K.</span><span class="pts">128p</span></div>
+
+        <div class="label">02 · Pointene</div>
+        <div class="body">Top-3 = 25/15/10 point. Eksakt podium = +5 stjernepoint.</div>
+
+        <div class="compact">
+          <span><b>1234567890</b> numbers</span>
+          <span><b>ABCDEFGHJ</b> caps</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 · Patrick Hand ====================================== -->
+    <div class="card patrick">
+      <div class="card-head">
+        <span class="name">2 · Patrick Hand</span>
+        <span>printed handwriting · tidy</span>
+      </div>
+      <div class="card-body">
+        <div class="title">Monaco Grand Prix</div>
+        <div class="pill">Næste løb</div>
+        <div class="body">Søndag 26. maj · 15:00 · Søndag igen, drenge. Lægger I et bud før de starter?</div>
+        <div class="cta">Læg dit bud</div>
+
+        <div class="h2">Rangliste · top 3</div>
+        <div class="row"><span class="rank">1</span><span class="who">Ole H.</span><span class="pts">142p</span></div>
+        <div class="row"><span class="rank">2</span><span class="who">Bjarne K.</span><span class="pts">128p</span></div>
+
+        <div class="label">02 · Pointene</div>
+        <div class="body">Top-3 = 25/15/10 point. Eksakt podium = +5 stjernepoint.</div>
+
+        <div class="compact">
+          <span><b>1234567890</b> numbers</span>
+          <span><b>ABCDEFGHJ</b> caps</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 · Caveat ============================================= -->
+    <div class="card caveat">
+      <div class="card-head">
+        <span class="name">3 · Caveat</span>
+        <span>flowing handwriting · friendliest</span>
+      </div>
+      <div class="card-body">
+        <div class="title">Monaco Grand Prix</div>
+        <div class="pill">Næste løb</div>
+        <div class="body">Søndag 26. maj · 15:00 · Søndag igen, drenge. Lægger I et bud før de starter?</div>
+        <div class="cta">Læg dit bud</div>
+
+        <div class="h2">Rangliste · top 3</div>
+        <div class="row"><span class="rank">1</span><span class="who">Ole H.</span><span class="pts">142p</span></div>
+        <div class="row"><span class="rank">2</span><span class="who">Bjarne K.</span><span class="pts">128p</span></div>
+
+        <div class="label">02 · Pointene</div>
+        <div class="body">Top-3 = 25/15/10 point. Eksakt podium = +5 stjernepoint.</div>
+
+        <div class="compact">
+          <span><b>1234567890</b> numbers</span>
+          <span><b>ABCDEFGHJ</b> caps</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 · Special Elite ===================================== -->
+    <div class="card elite">
+      <div class="card-head">
+        <span class="name">4 · Special Elite</span>
+        <span>typewriter · club newsletter energy</span>
+      </div>
+      <div class="card-body">
+        <div class="title">Monaco Grand Prix</div>
+        <div class="pill">Næste løb</div>
+        <div class="body">Søndag 26. maj · 15:00 · Søndag igen, drenge. Lægger I et bud før de starter?</div>
+        <div class="cta">Læg dit bud</div>
+
+        <div class="h2">Rangliste · top 3</div>
+        <div class="row"><span class="rank">1</span><span class="who">Ole H.</span><span class="pts">142p</span></div>
+        <div class="row"><span class="rank">2</span><span class="who">Bjarne K.</span><span class="pts">128p</span></div>
+
+        <div class="label">02 · Pointene</div>
+        <div class="body">Top-3 = 25/15/10 point. Eksakt podium = +5 stjernepoint.</div>
+
+        <div class="compact">
+          <span><b>1234567890</b> numbers</span>
+          <span><b>ABCDEFGHJ</b> caps</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="lede" style="margin-top: 28px; max-width: 60ch;">
+    Reply with the number (or font name) and I'll swap the wireframes over.
+  </p>
+</div>
+</body>
+</html>

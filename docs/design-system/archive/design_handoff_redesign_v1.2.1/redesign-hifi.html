@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hi-fi · 9 pages × 5 breakpoints</title>
+<link rel="stylesheet" href="hifi/style.css" />
+<style>
+  html, body { background: #1a1a1d; margin: 0; padding: 0; }
+  body.light { background: #d8d8dc; }
+  body { font-family: 'Manrope', system-ui, sans-serif; color: #f5f5f7; transition: background 0.25s; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="hifi/shell.jsx"></script>
+<script type="text/babel" src="hifi/home.jsx"></script>
+<script type="text/babel" src="hifi/rules.jsx"></script>
+<script type="text/babel" src="hifi/leaderboard.jsx"></script>
+<script type="text/babel" src="hifi/profile.jsx"></script>
+<script type="text/babel" src="hifi/races.jsx"></script>
+<script type="text/babel" src="hifi/race-detail.jsx"></script>
+<script type="text/babel" src="hifi/bet-modal.jsx"></script>
+<script type="text/babel" src="hifi/login.jsx"></script>
+<script type="text/babel" src="hifi/admin.jsx"></script>
+<script type="text/babel" src="hifi/states.jsx"></script>
+<script type="text/babel" src="hifi/bet-flow.jsx"></script>
+
+<script type="text/babel">
+  const {
+    BP,
+    PageHome, PageRules, PageLeaderboard, PageProfile,
+    PageRaces, PageRaceDetail, PageBetModal, PageLogin, PageAdmin,
+    PageStates, PageBetFlow,
+  } = window;
+
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "theme": "dark"
+  }/*EDITMODE-END*/;
+
+  // Calibrated artboard heights per page × breakpoint.
+  // (Tuned via verifier; tighten further once theme parity verified.)
+  const H = {
+    home:        { XS: 1080, SM: 1060, MD: 1340, LG: 1140, XL: 1220 },
+    rules:       { XS: 1310, SM: 1110, MD: 1230, LG: 1130, XL: 1140 },
+    leaderboard: { XS: 1160, SM: 1120, MD: 1230, LG: 1240, XL: 1250 },
+    profile:     { XS: 1180, SM: 1190, MD: 1080, LG: 880,  XL: 880  },
+    races:       { XS: 1300, SM: 1300, MD: 1180, LG: 1080, XL: 1080 },
+    raceDetail:  { XS: 1500, SM: 1500, MD: 1400, LG: 1340, XL: 1420 },
+    betModal:    { XS: 920,  SM: 920,  MD: 830,  LG: 830,  XL: 830  },
+    login:       { XS: 880,  SM: 920,  MD: 920,  LG: 800,  XL: 800  },
+    admin:       { XS: 1180, SM: 1180, MD: 1000, LG: 760,  XL: 760  },
+  };
+
+  function PageRow({ id, label, Comp, heights }) {
+    return (
+      <DCSection id={id} title={label}>
+        {["XS","SM","MD","LG","XL"].map(k => (
+          <DCArtboard
+            key={k}
+            id={`${id}-${k.toLowerCase()}`}
+            label={`${k} · ${BP[k].w}px`}
+            width={BP[k].w + 40}
+            height={heights[k] + 60}
+          >
+            <div style={{ padding: 20, display: "flex", justifyContent: "center" }}>
+              <Comp bp={BP[k]} />
+            </div>
+          </DCArtboard>
+        ))}
+      </DCSection>
+    );
+  }
+
+  function App() {
+    const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+    React.useEffect(() => {
+      document.body.classList.toggle('light', tweaks.theme === 'light');
+    }, [tweaks.theme]);
+
+    return (
+      <>
+        <TweaksPanel>
+          <TweakSection label="Theme" />
+          <TweakRadio
+            label="Mode"
+            value={tweaks.theme}
+            options={['dark', 'light']}
+            onChange={(v) => setTweak('theme', v)}
+          />
+        </TweaksPanel>
+
+        <DesignCanvas
+          title="Hi-fi · 9 pages × 5 breakpoints"
+          subtitle="Broadcast palette · clubhouse newsletter voice · top-hamburger + persistent bottom bar · dark/light via Tweaks"
+        >
+          <PageRow id="home"        label="01 · Home · race hero + leaderboard + recent"           Comp={PageHome}        heights={H.home} />
+          <PageRow id="races"       label="02 · Races · filterable season list"                    Comp={PageRaces}       heights={H.races} />
+          <PageRow id="race"        label="03 · Race detail · single race + your bet + all bets"   Comp={PageRaceDetail}  heights={H.raceDetail} />
+          <PageRow id="bet"         label="04 · Bet modal · 3-position picker with driver sheet"   Comp={PageBetModal}    heights={H.betModal} />
+          <PageRow id="leaderboard" label="05 · Leaderboard · podium + self pinned + full list"    Comp={PageLeaderboard} heights={H.leaderboard} />
+          <PageRow id="profile"     label="06 · Profile · stats + account card + bet history"      Comp={PageProfile}     heights={H.profile} />
+          <PageRow id="rules"       label="07 · Rules · numbered editorial sections + TOC"         Comp={PageRules}       heights={H.rules} />
+          <PageRow id="login"       label="08 · Login · auth + editorial intro at LG/XL"           Comp={PageLogin}       heights={H.login} />
+          <PageRow id="admin"       label="09 · Admin · tabs at MD+, dropdown below"               Comp={PageAdmin}       heights={H.admin} />
+
+          <DCSection id="states" title="10 · Interactive states reference (forced via .is-hover etc.)">
+            <DCArtboard id="states-all" label="All states · hover · active · focus · disabled" width={1040} height={1180}>
+              <div style={{ padding: 20, display: "flex", justifyContent: "center" }}>
+                <PageStates />
+              </div>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="betflow" title="11 · Bet modal flow · 5 steps from empty → success">
+            {[
+              { id: "s1", n: 1, label: "Step 1 · empty state" },
+              { id: "s2", n: 2, label: "Step 2 · picker open for 1st" },
+              { id: "s3", n: 3, label: "Step 3 · 1st picked, choosing 2nd" },
+              { id: "s4", n: 4, label: "Step 4 · all 3 picked, ready to confirm" },
+              { id: "s5", n: 5, label: "Step 5 · success" },
+            ].map(s => (
+              <DCArtboard key={s.id} id={`betflow-${s.id}`} label={s.label} width={BP.SM.w + 40} height={920}>
+                <div style={{ padding: 20, display: "flex", justifyContent: "center" }}>
+                  <PageBetFlow bp={BP.SM} step={s.n} />
+                </div>
+              </DCArtboard>
+            ))}
+          </DCSection>
+        </DesignCanvas>
+      </>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

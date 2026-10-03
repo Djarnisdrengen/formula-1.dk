@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Production font candidates · Patrick Hand + Special Elite alternatives</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Special+Elite&family=Caveat:wght@400;500;600;700&family=Kalam:wght@300;400;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Chivo:wght@400;700;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #131316;
+    --paper-2: #1c1c20;
+    --card: #232328;
+    --ink: #f5f5f7;
+    --ink-2: #b8b8be;
+    --ink-3: #8e8e95;
+    --line: #34343a;
+    --accent: #e10600;
+    --gold: #fbbf24;
+  }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Manrope', system-ui, sans-serif; }
+
+  .wrap { max-width: 1180px; margin: 40px auto; padding: 0 24px 80px; }
+  .intro {
+    max-width: 70ch;
+    color: var(--ink-2);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 8px 0 32px;
+  }
+  h1 {
+    font-family: 'Chivo', sans-serif;
+    font-weight: 900;
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+  }
+
+  /* ───────── Comparison grid ───────── */
+  .pair {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .pair-head {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper-2);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .pair-head h2 {
+    font-family: 'Chivo', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .pair-head .meta {
+    color: var(--ink-3);
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .col {
+    padding: 24px 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border-right: 1px dashed var(--line);
+  }
+  .col:last-child { border-right: none; }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-family: 'Chivo', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    width: fit-content;
+  }
+  .tag.wire {
+    background: rgba(225,6,0,0.12);
+    border: 1px solid rgba(225,6,0,0.4);
+    color: #ff6864;
+  }
+  .tag.prod {
+    background: rgba(16,185,129,0.12);
+    border: 1px solid rgba(16,185,129,0.4);
+    color: #10b981;
+  }
+
+  /* ───────── Type samples ───────── */
+  .sample-title {
+    font-size: 38px;
+    line-height: 1.05;
+    margin: 0;
+    color: var(--ink);
+    word-break: break-word;
+  }
+  .sample-body {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    margin: 0;
+    max-width: 38ch;
+  }
+  .sample-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-top: 6px;
+  }
+  .sample-meta {
+    font-size: 11px;
+    color: var(--ink-3);
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .ui-row {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .ui-rank {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--gold), #d97706);
+    color: #1a1a1d;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .ui-name {
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .ui-pts {
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .ui-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    font-weight: 700;
+    font-size: 14px;
+    width: fit-content;
+    cursor: pointer;
+  }
+
+  /* Each pair's left side uses its wireframe font, right side uses prod alternative */
+  .ph { font-family: 'Patrick Hand', cursive; }
+  .se { font-family: 'Special Elite', monospace; }
+  .ca { font-family: 'Caveat', cursive; }
+  /* Caveat reads small at default weight — bump it visually */
+  .ca .sample-title { font-size: 50px; font-weight: 600; letter-spacing: -0.005em; }
+  .ca .sample-body  { font-size: 16px; }
+  .ca .ui-name      { font-size: 16px; font-weight: 600; }
+  .ca .sample-label { font-size: 12px; letter-spacing: 0.1em; }
+  .ka { font-family: 'Kalam', cursive; }
+  /* Kalam reads slightly tighter than Patrick Hand at the same size */
+  .ka .sample-title { font-size: 36px; font-weight: 700; letter-spacing: -0.005em; }
+  .ka .sample-body  { font-weight: 400; }
+  .cp { font-family: 'Courier Prime', monospace; }
+
+  /* ───────── Quick reference card ───────── */
+  .compare-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 32px;
+  }
+  .compare-card h3 {
+    font-family: 'Chivo', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+    color: var(--ink-3);
+  }
+  table.matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.matrix th, table.matrix td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px dashed var(--line);
+  }
+  table.matrix th {
+    color: var(--ink-3);
+    font-family: 'Chivo', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  table.matrix tr:last-child td { border-bottom: none; }
+  table.matrix .swap {
+    color: var(--accent);
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Production font candidates</h1>
+  <p class="intro">
+    Patrick Hand and Special Elite are <em>technically</em> available on Google Fonts, but they're decorative display faces designed for posters and headlines — they don't hold up at 11–13px for UI labels, table cells, or form inputs. The two alternatives below capture the same personality with proper weight range, screen-tuned hinting, and tested production legibility. Each pair shows the wireframe font on the left and the production alternative on the right at the same content.
+  </p>
+
+  <!-- ─────────────── PAIR 1: PATRICK HAND → KALAM ─────────────── -->
+  <section class="pair">
+    <header class="pair-head">
+      <h2>Patrick Hand → Kalam</h2>
+      <span class="meta">printed handwriting · readable at body sizes</span>
+    </header>
+    <div class="grid">
+      <div class="col ph">
+        <span class="tag wire">Patrick Hand · wireframe-only</span>
+        <h3 class="sample-title">Monaco Grand Prix</h3>
+        <div class="sample-meta">Søndag 26. maj · 15:00</div>
+        <p class="sample-body">Søndag igen, drenge. Lægger I et bud før de starter? Kaffen er sat over.</p>
+
+        <div class="sample-label">02 · Pointene</div>
+        <p class="sample-body">Top-3 = 25/15/10 point. Eksakt podium = +5 stjernepoint.</p>
+
+        <div class="ui-row">
+          <div class="ui-rank" style="font-family: 'Chivo', sans-serif;">1</div>
+          <div class="ui-name">Ole H. · ★3</div>
+          <div class="ui-pts">142p</div>
+        </div>
+        <div class="sample-meta" style="margin-top: 8px;">
+          1 weight · no italic · falls apart at body sizes
+        </div>
+      </div>
+
+      <div class="col ka">
+        <span class="tag prod">Kalam · production-ready</span>
+        <h3 class="sample-title">Monaco Grand Prix</h3>
+        <div class="sample-meta">Søndag 26. maj · 15:00</div>
+        <p class="sample-body">Søndag igen, drenge. Lægger I et bud før de starter? Kaffen er sat over.</p>
+
+        <div class="sample-label">02 · Pointene</div>
+        <p class="sample-body">Top-3 = 25/15/10 point. Eksakt podium = +5 stjernepoint.</p>
+
+        <div class="ui-row">
+          <div class="ui-rank" style="font-family: 'Chivo', sans-serif;">1</div>
+          <div class="ui-name">Ole H. · ★3</div>
+          <div class="ui-pts" style="font-family: 'Chivo', sans-serif;">142p</div>
+        </div>
+        <div class="sample-meta" style="margin-top: 8px;">
+          3 weights (300/400/700) · printed (not cursive) · letters stay separate at small sizes
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── PAIR 2: SPECIAL ELITE → COURIER PRIME ─────────────── -->
+  <section class="pair">
+    <header class="pair-head">
+      <h2>Special Elite → Courier Prime</h2>
+      <span class="meta">typewriter · committee newsletter accent</span>
+    </header>
+    <div class="grid">
+      <div class="col se">
+        <span class="tag wire">Special Elite · wireframe-only</span>
+        <h3 class="sample-title">Monaco Grand Prix</h3>
+        <div class="sample-meta">Søndag 26. maj · 15:00</div>
+        <p class="sample-body">Søndag igen, drenge. Lægger I et bud før de starter? Kaffen er sat over.</p>
+
+        <div class="sample-label">02 · Pointene</div>
+        <p class="sample-body">Top-3 = 25/15/10 point. Eksakt podium = +5 stjernepoint.</p>
+
+        <div class="ui-row">
+          <div class="ui-rank" style="font-family: 'Chivo', sans-serif;">1</div>
+          <div class="ui-name">Ole H. · ★3</div>
+          <div class="ui-pts">142p</div>
+        </div>
+        <div class="sample-meta" style="margin-top: 8px;">
+          1 weight · no italic · simulated typewriter wear
+        </div>
+      </div>
+
+      <div class="col cp">
+        <span class="tag prod">Courier Prime · production-ready</span>
+        <h3 class="sample-title">Monaco Grand Prix</h3>
+        <div class="sample-meta">Søndag 26. maj · 15:00</div>
+        <p class="sample-body">Søndag igen, drenge. Lægger I et bud før de starter? Kaffen er sat over.</p>
+
+        <div class="sample-label">02 · Pointene</div>
+        <p class="sample-body">Top-3 = 25/15/10 point. Eksakt podium = +5 stjernepoint.</p>
+
+        <div class="ui-row">
+          <div class="ui-rank" style="font-family: 'Chivo', sans-serif;">1</div>
+          <div class="ui-name">Ole H. · ★3</div>
+          <div class="ui-pts" style="font-family: 'Chivo', sans-serif;">142p</div>
+        </div>
+        <div class="sample-meta" style="margin-top: 8px;">
+          4 weights · italic · designed for screen by Quote-Unquote Apps
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── Quick-reference matrix ─────────────── -->
+  <div class="compare-card">
+    <h3>At a glance</h3>
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>Need</th>
+          <th>Wireframe</th>
+          <th>Production</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Handwriting / clubhouse</td>
+          <td>Patrick Hand</td>
+          <td class="swap">Kalam</td>
+          <td>3 weights, printed (not cursive). Best for hero headlines + pull quotes; legible at 13px+ for body too.</td>
+        </tr>
+        <tr>
+          <td>Typewriter / committee</td>
+          <td>Special Elite</td>
+          <td class="swap">Courier Prime</td>
+          <td>Includes italic. Works for code snippets too if you want.</td>
+        </tr>
+        <tr>
+          <td>Primary UI (body + numbers)</td>
+          <td>—</td>
+          <td>Manrope</td>
+          <td>Stays as is. Don't replace.</td>
+        </tr>
+        <tr>
+          <td>Headlines + display</td>
+          <td>—</td>
+          <td>Chivo</td>
+          <td>Stays as is. Don't replace.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="intro" style="margin-top: 0;">
+    <strong>Why Kalam reads better than Caveat:</strong> Caveat is a flowing cursive (letters connect with strokes between them, italic-leaning), which gets harder to parse as the size drops. Kalam is a <em>print</em> handwriting — each letter stands alone, just like Patrick Hand — so it stays scannable at body sizes. Tell me to wire it in and I'll ship v1.2.3 with Kalam + Courier Prime as accent fonts.
+  </p>
+</div>
+</body>
+</html>

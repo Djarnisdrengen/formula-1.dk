@@ -1,0 +1,9 @@
+Rename this we have made here to something around  - f1 intelligence knowledge base updating -  so it fits a bit better.  and do not collide with the "f1-intelligence-handover" we did previously.
+
+
+
+It should not overwrite any files in 'public/f1-intelligence' or 'f1-intelligence'
+
+
+
+I already got the test up and running from previous handover

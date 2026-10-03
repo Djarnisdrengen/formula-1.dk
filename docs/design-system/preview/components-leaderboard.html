@@ -1,0 +1,72 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css"><style>
+  .lb { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
+  .entry {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 16px;
+    padding: 0.95rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .entry.top { background: linear-gradient(90deg, rgba(225, 6, 0, 0.12), transparent); }
+  .entry:last-child { border-bottom: none; }
+  .who strong { font-family: var(--font-display); font-size: 14px; }
+  .who small { display: block; color: var(--text-muted); font-size: 12px; }
+
+  /* Stars: PRIMARY metric — large gold pill, prominent */
+  .stars {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-display); font-weight: 800;
+    font-size: 18px; line-height: 1;
+    color: #fbbf24;
+    padding: 6px 12px;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    border-radius: 999px;
+    text-shadow: 0 0 12px rgba(251, 191, 36, 0.35);
+  }
+  .stars .glyph { font-size: 16px; }
+  .stars.zero {
+    color: var(--text-muted);
+    background: transparent;
+    border-color: var(--border-color);
+    text-shadow: none;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  /* Points: SECONDARY — muted, tabular, smaller */
+  .pts {
+    color: var(--text-secondary);
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    text-align: right;
+    min-width: 56px;
+  }
+  .pts b { color: var(--text-primary); font-weight: 600; }
+</style></head>
+<body class="dark"><div class="card-frame">
+  <div class="label-tiny">Leaderboard rows · stars lead, points support</div>
+  <div class="lb">
+    <div class="entry top">
+      <span class="position-badge position-1">1</span>
+      <div class="who"><strong>Ole H.</strong><small>14 bets</small></div>
+      <span class="stars"><span class="glyph">★</span>3</span>
+      <span class="pts"><b>142</b> pts</span>
+    </div>
+    <div class="entry top">
+      <span class="position-badge position-2">2</span>
+      <div class="who"><strong>Bjarne K.</strong><small>14 bets</small></div>
+      <span class="stars"><span class="glyph">★</span>1</span>
+      <span class="pts"><b>128</b> pts</span>
+    </div>
+    <div class="entry top">
+      <span class="position-badge position-3">3</span>
+      <div class="who"><strong>Søren D.</strong><small>13 bets</small></div>
+      <span class="stars zero">— no stars</span>
+      <span class="pts"><b>117</b> pts</span>
+    </div>
+  </div>
+</div></body></html>

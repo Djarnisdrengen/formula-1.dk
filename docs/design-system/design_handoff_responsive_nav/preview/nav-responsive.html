@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Responsive navigation · top-nav + admin menu</title>
+<link rel="stylesheet" href="_card.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<style>
+  /* ============================================================
+     DEMO CHROME — viewport simulators, not part of the patch
+     ============================================================ */
+  .frames {
+    display: flex; flex-direction: column; gap: 22px;
+    margin-top: 14px;
+  }
+  .frame {
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--bg-card);
+    overflow: hidden;
+  }
+  .frame-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+  }
+  .frame-head h3 {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+    margin: 0;
+  }
+  .frame-head .w {
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+    color: var(--text-muted);
+  }
+  .frame-body { padding: 16px; background: var(--bg-primary); }
+  .scaler {
+    /* Holds the .vp at its logical width and scales it down to fit
+       available space. Lets a 1280px header render & evaluate its
+       container queries at 1280px even when the surrounding pane is
+       narrower — it just looks smaller. */
+    overflow: hidden;
+    width: 100%;
+  }
+  .vp {
+    /* The "fake viewport" — establishes a container so our nav reacts */
+    background: var(--bg-secondary);
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+    container-type: inline-size;
+    container-name: header-vp;
+    width: var(--vp-w, 1280px);
+    transform-origin: top left;
+  }
+  .admin-scaler { overflow: hidden; width: 100%; }
+  .admin-shell { width: var(--vp-w, 1024px); transform-origin: top left; }
+
+  /* ============================================================
+     RESPONSIVE HEADER  ←  THIS IS THE PATCH
+     Scoped to the demo with `.demo-header` so it doesn't fight
+     the global .header rule. Copy these rules into style.css
+     and rename `.demo-header` → `.header`.
+     ============================================================ */
+  .demo-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+  }
+  .demo-header .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-width: 0;            /* KEY: allow children to truncate */
+  }
+
+  /* Logo — flexible, truncatable */
+  .demo-header .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;            /* KEY: let logo-text ellipsize */
+    text-decoration: none;
+    color: inherit;
+    flex: 0 1 auto;
+  }
+  .demo-header .logo-img {
+    height: 36px; width: auto; flex-shrink: 0;
+  }
+  .demo-header .logo-text {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: clamp(0.95rem, 1.5cqi + 0.6rem, 1.25rem);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .demo-header .logo-year {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-left: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  /* Nav — center cluster, can shrink to icon-only */
+  .demo-header .nav {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 0;
+  }
+  .demo-header .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    position: relative;
+  }
+  .demo-header .nav-link i { width: 16px; text-align: center; flex-shrink: 0; }
+  .demo-header .nav-link:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .demo-header .nav-link.active {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+  .demo-header .nav-link.active::before {
+    content: ""; position: absolute; left: 12px; right: 12px; bottom: 4px;
+    height: 2px; background: var(--f1-red); border-radius: 1px;
+  }
+
+  /* Controls cluster */
+  .demo-header .controls {
+    display: flex; align-items: center; gap: 0.25rem;
+    flex-shrink: 0;
+  }
+  .demo-header .btn-icon {
+    width: 36px; height: 36px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    border: none; background: transparent;
+    color: var(--text-secondary); cursor: pointer;
+  }
+  .demo-header .btn-icon:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .demo-header .user-chip {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+    border-radius: 999px;
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    font-size: 0.85rem; font-weight: 600;
+  }
+  .demo-header .user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--f1-red); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 800; font-size: 12px;
+  }
+  .demo-header .user-chip .star { color: var(--gold); font-weight: 700; font-size: 12px; }
+  .demo-header .btn-primary {
+    background: var(--f1-red); color: white;
+    padding: 0.5rem 1rem; border-radius: 8px;
+    font-family: var(--font-display); font-weight: 700; font-size: 0.85rem;
+    text-decoration: none;
+    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+  }
+  .demo-header .mobile-menu-btn {
+    display: none;
+    width: 40px; height: 40px;
+    border: none; background: transparent;
+    color: var(--text-primary); cursor: pointer;
+    font-size: 1.1rem; border-radius: 8px;
+  }
+  .demo-header .mobile-menu-btn:hover { background: var(--bg-hover); }
+
+  /* ----- Container-query breakpoints ----- */
+
+  /* Medium: 720-1024px → icon-only nav, year hidden, name truncates if needed */
+  @container header-vp (max-width: 1024px) {
+    .demo-header .logo-year { display: none; }
+    .demo-header .nav-link span { display: none; }
+    .demo-header .nav-link { padding: 0.5rem; width: 40px; height: 40px; justify-content: center; }
+    .demo-header .nav-link i { font-size: 16px; }
+    .demo-header .nav-link.active::before { left: 6px; right: 6px; }
+    .demo-header .user-chip .user-name { display: none; }
+  }
+
+  /* Compact: 560-720px → hide nav-link icons aren't enough — also drop "year" + user name */
+  @container header-vp (max-width: 720px) {
+    .demo-header .nav { gap: 0.1rem; }
+  }
+
+  /* Narrow / mobile: <560px → hamburger drawer, nav hidden inline */
+  @container header-vp (max-width: 560px) {
+    .demo-header .mobile-menu-btn { display: inline-flex; }
+    .demo-header .nav {
+      position: absolute;
+      top: 100%; right: 0;
+      flex-direction: column;
+      align-items: stretch;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.5rem;
+      min-width: 220px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+      z-index: 50;
+      display: none;
+      margin-top: 0.5rem;
+    }
+    .demo-header .header-content { position: relative; }
+    .demo-header .nav.open { display: flex; }
+    .demo-header .nav-link {
+      width: 100%; height: auto;
+      justify-content: flex-start;
+      padding: 0.65rem 0.75rem;
+    }
+    .demo-header .nav-link span { display: inline; }
+    .demo-header .nav-link.active::before { display: none; }
+    .demo-header .nav-link.active {
+      background: var(--bg-hover);
+      border-left: 3px solid var(--f1-red);
+    }
+    .demo-header .controls .btn-primary span,
+    .demo-header .controls .user-chip .user-name { display: none; }
+  }
+
+  /* ============================================================
+     ADMIN MENU
+     Desktop: tabs row. Mobile: native <details> dropdown.
+     No JS required.
+     ============================================================ */
+  .admin-shell {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    container-type: inline-size;
+    container-name: admin-vp;
+  }
+  .admin-shell-h {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-family: var(--font-display); font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .admin-shell-h i { color: var(--f1-red); }
+  .admin-shell-body { padding: 14px 16px 20px; }
+
+  /* Tab bar (desktop default) */
+  .admin-tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--border-color);
+    margin: 0 -16px 16px;
+    padding: 0 16px;
+    flex-wrap: wrap;
+  }
+  .admin-tab {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.65rem 0.9rem;
+    color: var(--text-secondary);
+    font-family: var(--font-display); font-weight: 600;
+    font-size: 0.85rem;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .admin-tab:hover { color: var(--text-primary); }
+  .admin-tab.active {
+    color: var(--f1-red);
+    border-bottom-color: var(--f1-red);
+  }
+  .admin-tab .tab-count {
+    background: var(--bg-hover);
+    color: var(--text-muted);
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-family: ui-monospace, monospace;
+  }
+  .admin-tab.active .tab-count {
+    background: var(--f1-red); color: white;
+  }
+
+  /* Mobile dropdown — uses native <details>, hidden on desktop */
+  .admin-dropdown { display: none; }
+  .admin-dropdown summary {
+    list-style: none;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--font-display); font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+  .admin-dropdown summary::-webkit-details-marker { display: none; }
+  .admin-dropdown summary .label {
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .admin-dropdown summary .label > i:first-child {
+    color: var(--f1-red);
+  }
+  .admin-dropdown summary .chev {
+    transition: transform 0.2s; color: var(--text-muted);
+  }
+  .admin-dropdown[open] summary .chev { transform: rotate(180deg); }
+  .admin-dropdown .menu {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 4px;
+    margin-top: -8px; margin-bottom: 16px;
+    display: flex; flex-direction: column;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  }
+  .admin-dropdown .menu a {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 0.85rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-family: var(--font-display); font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 6px;
+  }
+  .admin-dropdown .menu a .l { display: flex; align-items: center; gap: 0.65rem; }
+  .admin-dropdown .menu a:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .admin-dropdown .menu a.active {
+    background: var(--bg-hover); color: var(--f1-red);
+  }
+  .admin-dropdown .menu a .tab-count {
+    background: var(--bg-card);
+    color: var(--text-muted);
+    padding: 1px 7px; border-radius: 999px;
+    font-size: 0.7rem; font-weight: 700;
+    font-family: ui-monospace, monospace;
+  }
+  .admin-dropdown .menu a.active .tab-count {
+    background: var(--f1-red); color: white;
+  }
+
+  /* Container-query switch */
+  @container admin-vp (max-width: 720px) {
+    .admin-tabs { display: none; }
+    .admin-dropdown { display: block; }
+  }
+
+  .admin-content {
+    padding: 16px;
+    background: var(--bg-primary);
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  /* ============================================================
+     Annotation styling
+     ============================================================ */
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; }
+  .legend > span {
+    font-family: ui-monospace, Menlo, monospace; font-size: 10px;
+    background: var(--bg-secondary);
+    padding: 3px 7px; border-radius: 4px;
+    color: var(--text-muted);
+  }
+  .legend > span b { color: var(--text-primary); font-weight: 600; }
+  .note {
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+    color: var(--text-muted); line-height: 1.5;
+    padding: 12px 14px;
+    background: var(--bg-secondary);
+    border-left: 3px solid var(--f1-red);
+    border-radius: 6px;
+    margin-top: 18px;
+  }
+  .note b { color: var(--text-primary); font-weight: 700; }
+  pre.patch {
+    background: #0d0d10;
+    color: #c8c8cc;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px; line-height: 1.55;
+    overflow-x: auto;
+    margin: 0;
+  }
+  pre.patch .c { color: #6a6a70; }
+  pre.patch .k { color: #f59e0b; }
+  pre.patch .s { color: #10b981; }
+  pre.patch .p { color: #e10600; }
+
+  section.block {
+    margin-top: 32px;
+  }
+  section.block > h2 {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;
+    margin: 0 0 6px; color: var(--text-primary);
+  }
+  section.block > p {
+    color: var(--text-secondary); font-size: 13px; line-height: 1.55;
+    max-width: 75ch; margin: 0 0 14px;
+  }
+
+  /* User toggle (public ↔ gated, role swap) */
+  .role-bar {
+    display: flex; gap: 8px; align-items: center;
+    margin-bottom: 10px;
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+    color: var(--text-muted);
+  }
+  .role-pill {
+    border: 1px solid var(--border-color);
+    padding: 3px 9px; border-radius: 999px;
+    font-weight: 700; cursor: pointer;
+    background: var(--bg-card); color: var(--text-secondary);
+  }
+  .role-pill.active { background: var(--f1-red); color: white; border-color: var(--f1-red); }
+</style>
+</head>
+<body class="dark">
+<div class="card-frame">
+
+  <header>
+    <h1 style="font-family: var(--font-display); font-weight: 900; font-size: 22px; margin: 0; letter-spacing: -0.01em;">Responsive navigation</h1>
+    <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.5; margin: 6px 0 0; max-width: 70ch;">
+      Top-nav and admin menu rebuilt around <b style="color: var(--text-primary);">container queries</b> so they react to their own container, not the viewport. Drop more menu items in — the layout collapses gracefully through three stages before falling back to a drawer. Admin menu trades its mobile horizontal-scroll for a native <code>&lt;details&gt;</code> dropdown (no JS).
+    </p>
+  </header>
+
+  <!-- Role toggle to swap public ↔ gated states across all demos -->
+  <div class="role-bar">
+    <span>State:</span>
+    <button class="role-pill active" data-role="public">Public (logged-out)</button>
+    <button class="role-pill" data-role="member">Member</button>
+    <button class="role-pill" data-role="admin">Admin (max items)</button>
+  </div>
+
+  <!-- ============================================================
+       PART 1 — Top navigation at 4 container widths
+       ============================================================ -->
+  <section class="block">
+    <h2>1 · Top navigation · 4 stages</h2>
+    <p>Same markup in every frame; only the container width changes. The header reads its own width via a container query, so the layout adapts even when the same nav lives inside a sidebar or split-screen.</p>
+
+    <div class="frames">
+      <div class="frame">
+        <div class="frame-head">
+          <h3>Stage A · Desktop · full nav</h3>
+          <span class="w">1280px container · full text labels · year + name visible</span>
+        </div>
+        <div class="frame-body">
+          <div class="scaler"><div class="vp" data-w="1280">
+            <div class="demo-header"><div class="header-content">
+
+              <a class="logo">
+                <span class="logo-img" style="background:var(--f1-red); display:inline-flex; align-items:center; justify-content:center; color:white; border-radius:8px; font-family:var(--font-display); font-weight:900; font-size:14px; width:36px; height:36px;">F1</span>
+                <span class="logo-text">Frederikssund Formel 1 Klub</span>
+                <span class="logo-year">2026</span>
+              </a>
+
+              <nav class="nav" data-nav>
+                <a class="nav-link active" data-role-show="all"><i class="fas fa-home"></i> <span>Hjem</span></a>
+                <a class="nav-link" data-role-show="all"><i class="fas fa-trophy"></i> <span>Rangliste</span></a>
+                <a class="nav-link" data-role-show="all"><i class="fas fa-flag"></i> <span>Løb</span></a>
+                <a class="nav-link" data-role-show="member admin"><i class="fas fa-book"></i> <span>Regler</span></a>
+                <a class="nav-link" data-role-show="admin"><i class="fas fa-cog"></i> <span>Admin</span></a>
+              </nav>
+
+              <div class="controls">
+                <button class="btn-icon" title="Theme"><i class="fas fa-sun"></i></button>
+                <button class="btn-icon" title="Lang"><i class="fas fa-globe"></i></button>
+                <span class="user-chip" data-role-show="member admin">
+                  <span class="user-avatar">O</span>
+                  <span class="user-name">Ole H.</span>
+                  <span class="star">★3</span>
+                </span>
+                <a class="btn-primary" data-role-show="public"><span>Log ind</span></a>
+              </div>
+
+              <button class="mobile-menu-btn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+
+            </div></div>
+          </div></div>
+          <div class="legend" style="margin-top: 10px;">
+            <span><b>nav-link span</b> visible</span>
+            <span><b>logo-year</b> visible</span>
+            <span><b>user-name</b> visible</span>
+            <span><b>mobile-menu-btn</b> hidden</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-head">
+          <h3>Stage B · Squeezed · icon-only nav</h3>
+          <span class="w">900px container · text labels collapsed to icons · year + name dropped</span>
+        </div>
+        <div class="frame-body">
+          <div class="scaler"><div class="vp" data-w="900">
+            <div class="demo-header"><div class="header-content">
+
+              <a class="logo">
+                <span class="logo-img" style="background:var(--f1-red); display:inline-flex; align-items:center; justify-content:center; color:white; border-radius:8px; font-family:var(--font-display); font-weight:900; font-size:14px; width:36px; height:36px;">F1</span>
+                <span class="logo-text">Frederikssund Formel 1 Klub</span>
+                <span class="logo-year">2026</span>
+              </a>
+
+              <nav class="nav" data-nav>
+                <a class="nav-link active" title="Hjem"><i class="fas fa-home"></i> <span>Hjem</span></a>
+                <a class="nav-link" title="Rangliste"><i class="fas fa-trophy"></i> <span>Rangliste</span></a>
+                <a class="nav-link" title="Løb"><i class="fas fa-flag"></i> <span>Løb</span></a>
+                <a class="nav-link" data-role-show="member admin" title="Regler"><i class="fas fa-book"></i> <span>Regler</span></a>
+                <a class="nav-link" data-role-show="admin" title="Admin"><i class="fas fa-cog"></i> <span>Admin</span></a>
+              </nav>
+
+              <div class="controls">
+                <button class="btn-icon" title="Theme"><i class="fas fa-sun"></i></button>
+                <button class="btn-icon" title="Lang"><i class="fas fa-globe"></i></button>
+                <span class="user-chip" data-role-show="member admin">
+                  <span class="user-avatar">O</span>
+                  <span class="user-name">Ole H.</span>
+                  <span class="star">★3</span>
+                </span>
+                <a class="btn-primary" data-role-show="public"><span>Log ind</span></a>
+              </div>
+
+              <button class="mobile-menu-btn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+
+            </div></div>
+          </div></div>
+          <div class="legend" style="margin-top: 10px;">
+            <span><b>span</b> hidden via <code>@container (max-width: 1024px)</code></span>
+            <span>Each link is now 40×40</span>
+            <span>Tooltip on hover (title=)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-head">
+          <h3>Stage C · Tablet · still inline</h3>
+          <span class="w">700px container · icon-only nav holds up · controls cluster compresses</span>
+        </div>
+        <div class="frame-body">
+          <div class="scaler"><div class="vp" data-w="700">
+            <div class="demo-header"><div class="header-content">
+
+              <a class="logo">
+                <span class="logo-img" style="background:var(--f1-red); display:inline-flex; align-items:center; justify-content:center; color:white; border-radius:8px; font-family:var(--font-display); font-weight:900; font-size:14px; width:36px; height:36px;">F1</span>
+                <span class="logo-text">Frederikssund Formel 1 Klub</span>
+              </a>
+
+              <nav class="nav" data-nav>
+                <a class="nav-link active" title="Hjem"><i class="fas fa-home"></i> <span>Hjem</span></a>
+                <a class="nav-link" title="Rangliste"><i class="fas fa-trophy"></i> <span>Rangliste</span></a>
+                <a class="nav-link" title="Løb"><i class="fas fa-flag"></i> <span>Løb</span></a>
+                <a class="nav-link" data-role-show="member admin" title="Regler"><i class="fas fa-book"></i> <span>Regler</span></a>
+                <a class="nav-link" data-role-show="admin" title="Admin"><i class="fas fa-cog"></i> <span>Admin</span></a>
+              </nav>
+
+              <div class="controls">
+                <button class="btn-icon" title="Theme"><i class="fas fa-sun"></i></button>
+                <button class="btn-icon" title="Lang"><i class="fas fa-globe"></i></button>
+                <span class="user-chip" data-role-show="member admin">
+                  <span class="user-avatar">O</span>
+                  <span class="user-name">Ole H.</span>
+                  <span class="star">★3</span>
+                </span>
+                <a class="btn-primary" data-role-show="public"><span>Log ind</span></a>
+              </div>
+
+              <button class="mobile-menu-btn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+
+            </div></div>
+          </div></div>
+          <div class="legend" style="margin-top: 10px;">
+            <span>Logo text truncates with ellipsis via <code>min-width: 0</code></span>
+            <span>Logo size scales with <code>clamp() + cqi</code></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-head">
+          <h3>Stage D · Mobile · hamburger drawer</h3>
+          <span class="w">375px container · nav anchors below logo · single tap reveals all items</span>
+        </div>
+        <div class="frame-body">
+          <div class="scaler"><div class="vp" data-w="375">
+            <div class="demo-header"><div class="header-content">
+
+              <a class="logo">
+                <span class="logo-img" style="background:var(--f1-red); display:inline-flex; align-items:center; justify-content:center; color:white; border-radius:8px; font-family:var(--font-display); font-weight:900; font-size:14px; width:36px; height:36px;">F1</span>
+                <span class="logo-text">Frederikssund F1 Klub</span>
+              </a>
+
+              <nav class="nav open" data-nav>
+                <a class="nav-link active"><i class="fas fa-home"></i> <span>Hjem</span></a>
+                <a class="nav-link"><i class="fas fa-trophy"></i> <span>Rangliste</span></a>
+                <a class="nav-link"><i class="fas fa-flag"></i> <span>Løb</span></a>
+                <a class="nav-link" data-role-show="member admin"><i class="fas fa-book"></i> <span>Regler</span></a>
+                <a class="nav-link" data-role-show="admin"><i class="fas fa-cog"></i> <span>Admin</span></a>
+                <a class="nav-link" data-role-show="member admin"><i class="fas fa-user"></i> <span>Profil</span></a>
+                <a class="nav-link" data-role-show="member admin"><i class="fas fa-sign-out-alt"></i> <span>Log ud</span></a>
+              </nav>
+
+              <div class="controls">
+                <button class="btn-icon" title="Theme"><i class="fas fa-sun"></i></button>
+                <a class="btn-primary" data-role-show="public" title="Log ind"><i class="fas fa-sign-in-alt"></i></a>
+              </div>
+
+              <button class="mobile-menu-btn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+
+            </div></div>
+          </div></div>
+          <div class="legend" style="margin-top: 10px;">
+            <span>Drawer anchored below header — keeps body scrollable</span>
+            <span>Profil + Log ud live inside drawer (current behavior)</span>
+            <span>Header keeps theme toggle as a one-tap</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PART 2 — Admin menu desktop vs mobile
+       ============================================================ -->
+  <section class="block">
+    <h2>2 · Admin menu · tabs → dropdown</h2>
+    <p>Desktop keeps the existing tab bar (now allowed to wrap instead of scroll). Below 720px it swaps to a native <code>&lt;details&gt;</code> dropdown — same items, no horizontal scroll, and works without JS so it can't get stuck open mid-toggle.</p>
+
+    <div class="frames">
+      <div class="frame">
+        <div class="frame-head">
+          <h3>Desktop · tabs (allowed to wrap)</h3>
+          <span class="w">1024px container</span>
+        </div>
+        <div class="frame-body">
+          <div class="admin-scaler"><div class="admin-shell" data-w="1024">
+            <div class="admin-shell-h"><i class="fas fa-cog"></i> Admin</div>
+            <div class="admin-shell-body">
+
+              <details class="admin-dropdown" id="adm1">
+                <summary>
+                  <span class="label"><i class="fas fa-flag"></i> Løb <span class="tab-count">12</span></span>
+                  <i class="fas fa-chevron-down chev"></i>
+                </summary>
+                <div class="menu">
+                  <a class="active"><span class="l"><i class="fas fa-flag"></i> Løb</span><span class="tab-count">12</span></a>
+                  <a><span class="l"><i class="fas fa-users"></i> Medlemmer</span><span class="tab-count">24</span></a>
+                  <a><span class="l"><i class="fas fa-id-card"></i> Kørere</span><span class="tab-count">20</span></a>
+                  <a><span class="l"><i class="fas fa-envelope"></i> Invitationer</span><span class="tab-count">3</span></a>
+                  <a><span class="l"><i class="fas fa-trophy"></i> Resultater</span></a>
+                  <a><span class="l"><i class="fas fa-sliders"></i> Indstillinger</span></a>
+                  <a><span class="l"><i class="fas fa-clipboard"></i> Logs</span></a>
+                </div>
+              </details>
+
+              <div class="admin-tabs">
+                <a class="admin-tab active"><i class="fas fa-flag"></i> Løb <span class="tab-count">12</span></a>
+                <a class="admin-tab"><i class="fas fa-users"></i> Medlemmer <span class="tab-count">24</span></a>
+                <a class="admin-tab"><i class="fas fa-id-card"></i> Kørere <span class="tab-count">20</span></a>
+                <a class="admin-tab"><i class="fas fa-envelope"></i> Invitationer <span class="tab-count">3</span></a>
+                <a class="admin-tab"><i class="fas fa-trophy"></i> Resultater</a>
+                <a class="admin-tab"><i class="fas fa-sliders"></i> Indstillinger</a>
+                <a class="admin-tab"><i class="fas fa-clipboard"></i> Logs</a>
+              </div>
+              <div class="admin-content">→ Active tab panel renders here</div>
+
+            </div>
+          </div></div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-head">
+          <h3>Mobile · dropdown</h3>
+          <span class="w">375px container · no horizontal scroll · sub-screens hidden behind one tap</span>
+        </div>
+        <div class="frame-body">
+          <div class="admin-scaler"><div class="admin-shell" data-w="375">
+            <div class="admin-shell-h"><i class="fas fa-cog"></i> Admin</div>
+            <div class="admin-shell-body">
+
+              <details class="admin-dropdown" open>
+                <summary>
+                  <span class="label"><i class="fas fa-flag"></i> Løb <span class="tab-count">12</span></span>
+                  <i class="fas fa-chevron-down chev"></i>
+                </summary>
+                <div class="menu">
+                  <a class="active"><span class="l"><i class="fas fa-flag"></i> Løb</span><span class="tab-count">12</span></a>
+                  <a><span class="l"><i class="fas fa-users"></i> Medlemmer</span><span class="tab-count">24</span></a>
+                  <a><span class="l"><i class="fas fa-id-card"></i> Kørere</span><span class="tab-count">20</span></a>
+                  <a><span class="l"><i class="fas fa-envelope"></i> Invitationer</span><span class="tab-count">3</span></a>
+                  <a><span class="l"><i class="fas fa-trophy"></i> Resultater</span></a>
+                  <a><span class="l"><i class="fas fa-sliders"></i> Indstillinger</span></a>
+                  <a><span class="l"><i class="fas fa-clipboard"></i> Logs</span></a>
+                </div>
+              </details>
+
+              <div class="admin-tabs">
+                <a class="admin-tab active"><i class="fas fa-flag"></i> Løb <span class="tab-count">12</span></a>
+                <a class="admin-tab"><i class="fas fa-users"></i> Medlemmer <span class="tab-count">24</span></a>
+                <a class="admin-tab"><i class="fas fa-id-card"></i> Kørere <span class="tab-count">20</span></a>
+                <a class="admin-tab"><i class="fas fa-envelope"></i> Invitationer <span class="tab-count">3</span></a>
+                <a class="admin-tab"><i class="fas fa-trophy"></i> Resultater</a>
+                <a class="admin-tab"><i class="fas fa-sliders"></i> Indstillinger</a>
+                <a class="admin-tab"><i class="fas fa-clipboard"></i> Logs</a>
+              </div>
+              <div class="admin-content">→ Active tab panel renders here</div>
+
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PART 3 — Patch reference
+       ============================================================ -->
+  <section class="block">
+    <h2>3 · What changes in code</h2>
+    <p>Three small, additive changes. No new files — only one CSS block appended, one PHP markup tweak, and the admin tab template rewrapped. Existing classes are kept so other styles still apply.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div>
+        <div class="label-tiny" style="margin-bottom: 6px;">style.css · append at end of header block</div>
+<pre class="patch"><span class="c">/* === Responsive header (container-query based) === */</span>
+.header { <span class="k">container-type</span>: inline-size; <span class="k">container-name</span>: header-vp; }
+.header-content { <span class="k">min-width</span>: 0; }
+.logo { <span class="k">min-width</span>: 0; <span class="k">flex</span>: 0 1 auto; }
+.logo-text {
+  <span class="k">font-size</span>: <span class="s">clamp(0.95rem, 1.5cqi + 0.6rem, 1.25rem)</span>;
+  <span class="k">white-space</span>: nowrap; <span class="k">overflow</span>: hidden;
+  <span class="k">text-overflow</span>: ellipsis; <span class="k">min-width</span>: 0;
+}
+.nav { <span class="k">flex</span>: 1 1 auto; <span class="k">justify-content</span>: center; <span class="k">min-width</span>: 0; }
+
+<span class="c">/* Stage B: icon-only nav, year hidden */</span>
+@container header-vp (max-width: 1024px) {
+  .logo-year { <span class="k">display</span>: none; }
+  .nav-link span { <span class="k">display</span>: none; }
+  .nav-link { <span class="k">padding</span>: .5rem; <span class="k">width</span>: 40px; <span class="k">height</span>: 40px; }
+  .user-name { <span class="k">display</span>: none; }
+}
+
+<span class="c">/* Stage D: hamburger drawer */</span>
+@container header-vp (max-width: 560px) {
+  .mobile-menu-btn { <span class="k">display</span>: inline-flex; }
+  .nav {
+    <span class="k">position</span>: absolute; <span class="k">top</span>: 100%; <span class="k">right</span>: 0;
+    <span class="k">flex-direction</span>: column; <span class="k">display</span>: none;
+    <span class="k">background</span>: <span class="s">var(--bg-card)</span>; <span class="k">border-radius</span>: 12px;
+    <span class="k">padding</span>: .5rem; <span class="k">min-width</span>: 220px;
+  }
+  .header-content { <span class="k">position</span>: relative; }
+  .nav.active { <span class="k">display</span>: flex; }
+  .nav-link span { <span class="k">display</span>: inline; }
+  .nav-link { <span class="k">width</span>: 100%; <span class="k">height</span>: auto; }
+}
+
+<span class="c">/* Then DELETE the old @media (max-width: 768px) blocks
+   that handled .nav / .header-content / .logo-text — they're
+   now expressed as container queries above. */</span></pre>
+      </div>
+
+      <div>
+        <div class="label-tiny" style="margin-bottom: 6px;">style.css · admin tabs section</div>
+<pre class="patch"><span class="c">/* Replace the .tabs rule with: */</span>
+.admin-shell { <span class="k">container-type</span>: inline-size; <span class="k">container-name</span>: admin-vp; }
+.tabs { <span class="k">display</span>: flex; <span class="k">flex-wrap</span>: wrap; <span class="k">gap</span>: .25rem; }
+.admin-dropdown { <span class="k">display</span>: none; }
+
+@container admin-vp (max-width: 720px) {
+  .tabs { <span class="k">display</span>: none; }
+  .admin-dropdown { <span class="k">display</span>: block; }
+}
+
+<span class="c">/* Drop the old `.tabs { overflow-x: auto; }` block.
+   `<details class="admin-dropdown">` is the new mobile nav. */</span></pre>
+
+        <div class="label-tiny" style="margin-top: 14px; margin-bottom: 6px;">admin.php · wrap tabs in container + add dropdown</div>
+<pre class="patch"><span class="p">&lt;div class=<span class="s">"admin-shell"</span>&gt;</span>
+  <span class="c">&lt;!-- existing tabs --&gt;</span>
+  <span class="p">&lt;div class=<span class="s">"tabs"</span>&gt;</span>
+    <span class="c">&lt;!-- &lt;a class="tab"&gt;…&lt;/a&gt; for each section --&gt;</span>
+  <span class="p">&lt;/div&gt;</span>
+
+  <span class="c">&lt;!-- new mobile dropdown — same items --&gt;</span>
+  <span class="p">&lt;details class=<span class="s">"admin-dropdown"</span>&gt;</span>
+    <span class="p">&lt;summary&gt;</span>
+      <span class="p">&lt;span class=<span class="s">"label"</span>&gt;</span>
+        <span class="p">&lt;i class=<span class="s">"fas fa-flag"</span>&gt;&lt;/i&gt;</span> Løb
+      <span class="p">&lt;/span&gt;</span>
+      <span class="p">&lt;i class=<span class="s">"fas fa-chevron-down chev"</span>&gt;&lt;/i&gt;</span>
+    <span class="p">&lt;/summary&gt;</span>
+    <span class="p">&lt;div class=<span class="s">"menu"</span>&gt;</span>
+      <span class="c">&lt;!-- same &lt;a&gt; list, ?tab=… links --&gt;</span>
+    <span class="p">&lt;/div&gt;</span>
+  <span class="p">&lt;/details&gt;</span>
+<span class="p">&lt;/div&gt;</span></pre>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Why container queries instead of media queries</b> · the live <code>.header</code> width depends on <code>.container</code> max-width (1200px) plus padding — viewport width and header width drift apart on tablets, in PWA splits, in browser dev-tools sidebars, and once you start nesting layouts. Container queries fix it to the only number that matters: how wide the header actually is. Browser support: Chrome/Edge 105, Safari 16, Firefox 110 — all shipped 2022.
+    </div>
+
+    <div class="note" style="border-left-color: var(--gold);">
+      <b>Adding new menu items in future</b> · just append a <code>&lt;a class="nav-link"&gt;</code> — Stage A wraps to a new row if needed, Stage B already collapses to icons (5+ items fit in icon mode all the way down to 600px wide), Stage D drawer is a vertical list so unlimited items work. Same for admin: append a <code>&lt;a class="tab"&gt;</code> and a matching <code>&lt;a&gt;</code> in the dropdown menu.
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Role toggle — show/hide items per role to demonstrate menu density
+  const pills = document.querySelectorAll('.role-pill');
+  function applyRole(role) {
+    pills.forEach(p => p.classList.toggle('active', p.dataset.role === role));
+    document.querySelectorAll('[data-role-show]').forEach(el => {
+      const roles = el.dataset.roleShow.split(' ');
+      el.style.display = (roles.includes(role) || roles.includes('all')) ? '' : 'none';
+    });
+  }
+  pills.forEach(p => p.addEventListener('click', () => { applyRole(p.dataset.role); fitAll(); }));
+
+  // Scale each .vp / .admin-shell to its container so the container query
+  // still evaluates against the *logical* width stated in the caption.
+  function fitOne(scaler, target) {
+    const w = parseInt(target.dataset.w, 10);
+    target.style.setProperty('--vp-w', w + 'px');
+    target.style.transform = 'none';
+    const avail = scaler.clientWidth;
+    const scale = Math.min(1, avail / w);
+    target.style.transform = `scale(${scale})`;
+    // After scaling, compute the *visual* bottom — including absolutely
+    // positioned descendants (e.g. the open drawer in Stage D) that
+    // would otherwise be clipped by the scaler's overflow:hidden.
+    requestAnimationFrame(() => {
+      const top = target.getBoundingClientRect().top;
+      let maxBottom = target.getBoundingClientRect().bottom;
+      target.querySelectorAll('*').forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.bottom > maxBottom) maxBottom = r.bottom;
+      });
+      scaler.style.height = (maxBottom - top) + 'px';
+    });
+  }
+  function fitAll() {
+    document.querySelectorAll('.scaler').forEach(s => {
+      const vp = s.querySelector('.vp'); if (vp) fitOne(s, vp);
+    });
+    document.querySelectorAll('.admin-scaler').forEach(s => {
+      const sh = s.querySelector('.admin-shell'); if (sh) fitOne(s, sh);
+    });
+  }
+  window.addEventListener('load', fitAll);
+  window.addEventListener('resize', fitAll);
+  // Run after fonts load so heights settle
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+  // Refit when <details> opens (height changes)
+  document.querySelectorAll('details').forEach(d => d.addEventListener('toggle', fitAll));
+  applyRole('public');
+  fitAll();
+</script>
+
+</body>
+</html>

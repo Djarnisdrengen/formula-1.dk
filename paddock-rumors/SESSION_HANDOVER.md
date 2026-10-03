@@ -47,7 +47,7 @@ A content-generation pipeline (`paddock-rumors/`) that auto-builds a tagged F1 k
   - `test.php` (KB inspector) reads `public/paddock-rumors/knowledge-base.json` on the **PHP server** → needs `cp data/ → public/` + `npm run deploy:test` (cron does the cp automatically on its commits)
   - `query.php` (query API) reads the KB via the **Vercel function**, which now pulls from **GitHub raw at runtime** → a `git push` alone makes new KB live within ~5 min, no deploy step
 - After a **local** backfill, do: `cp data/knowledge-base.json public/paddock-rumors/` → commit → push → `npm run deploy:test` (covers both consumers)
-- Correct test domain is `hpovlsen.dk` (typo `hpovslen.dk` was fixed everywhere)
+- Test domain is `formula-1.helvegpovlsen.dk` (live: `formula-1.dk`)
 - All commits end with `Co-Authored-By: Claude ...`
 
 ## Likely next steps

@@ -52,7 +52,7 @@ the `forgot_password` e2e param, so they land in web-server/proxy access logs an
      test-env only; noted in the workflow file, not fixed here.)
   3. ✅ `schedule:` enabled in both workflow files (deployed to `main`); Simply.com control-panel
      entries deleted and confirmed removed by user, same sitting.
-  4. ✅ Added equivalent triggers for hpovlsen.dk (test) at the same cadence — each workflow now
+  4. ✅ Added equivalent triggers for the test site at the same cadence — each workflow now
      runs `trigger-live` and `trigger-test` jobs on one shared `schedule:`. Chosen as full parity
      over `workflow_dispatch`-only for test, knowingly: outside an E2E run `SMTP_INTERCEPT` isn't
      active (gotcha #17), so notifications sends real email on test too, and the qualifying import

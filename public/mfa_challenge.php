@@ -154,7 +154,7 @@ function mfaMethodMeta(string $method, string $email = ''): array {
     return ['icon' => 'fa-key', 'title' => t('recovery_codes'), 'hint' => t('mfa_hint_recovery'), 'sub' => t('mfa_sub_recovery')];
 }
 
-// th•••@hpovlsen.dk — first two chars of the local part, domain intact.
+// jo•••@example.com — first two chars of the local part, domain intact.
 function maskEmail(string $email): string {
     $at = strpos($email, '@');
     if ($at === false) return $email;

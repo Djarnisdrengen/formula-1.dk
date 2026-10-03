@@ -2009,5 +2009,20 @@
     "source_url": "https://en.wikipedia.org/wiki/2026_Azerbaijan_Grand_Prix",
     "updated_at": "2026-09-26T16:15:01.625Z",
     "content_hash": "8c391286e93d3d21"
+  },
+  {
+    "id": "quali-2026-r16-sepang",
+    "title": "Bahrain Grand Prix in Malaysia 2026 — Qualifying",
+    "content": "Season 2026, Round 16 Qualifying: Bahrain Grand Prix in Malaysia. Max Verstappen claimed pole position for the Bahrain Grand Prix at Sepang International Circuit, setting a Q3 best of 1:35.130 for Red Bull. Lewis Hamilton qualified second for Ferrari, 0.298 seconds behind, with Isack Hadjar completing an impressive Red Bull front-row lockout attempt in third at 1:35.558. Andrea Kimi Antonelli placed fourth for Mercedes at 1:35.631, just 0.073 seconds clear of Ferrari's Charles Leclerc in fifth. The top five were covered by 0.536 seconds, indicating a closely matched midfield of leading constructors.\n\nNotable qualifying performances include Gabriel Bortoleto reaching Q3 for Audi in tenth, a strong result for the manufacturer. Pierre Gasly delivered Alpine's sole Q3 appearance in ninth, while teammate Franco Colapinto was eliminated in Q1 in fifteenth, a significant intra-team gap. Carlos Sainz qualified thirteenth for Williams, outpacing teammate Alexander Albon who exited Q1 in twentieth. Both Cadillac F1 Team drivers, Valtteri Bottas and Sergio Pérez, ended the session in the bottom two positions.\n\nThe qualifying order suggests Red Bull holds a genuine single-lap pace advantage at Sepang, with Ferrari and Mercedes closely matched behind. McLaren's Lando Norris and Oscar Piastri in sixth and seventh indicate competitive race pace, while Alpine and Audi's Q3 presence suggests potential points-scoring capability under optimal race conditions.",
+    "tags": {
+      "season": 2026,
+      "type": "qualifying",
+      "round": 16,
+      "circuit": "sepang-international-circuit",
+      "pole_driver": "max-verstappen"
+    },
+    "source_url": null,
+    "updated_at": "2026-10-03T16:07:41.932Z",
+    "content_hash": "5cd48eb98ff96452"
   }
 ]

@@ -77,6 +77,17 @@ class CustomReporter {
         }
     }
 
+    // Errors outside any test (global-setup crash, spec load failure, missing browser binary).
+    // Without this hook Playwright's custom-reporter API drops them silently and onEnd can only
+    // say "setup failed" with no cause.
+    onError(error) {
+        const msg = error.message || error.value || String(error);
+        process.stdout.write(`\n❌ Playwright error outside tests:\n${msg}\n`);
+        if (error.stack && !error.stack.includes(msg)) {
+            process.stdout.write(`${error.stack.split("\n").slice(0, 8).join("\n")}\n`);
+        }
+    }
+
     onEnd(result) {
         const total = this._passed + this._failed;
         const elapsed = formatDuration((Date.now() - this._startTime) / 1000);

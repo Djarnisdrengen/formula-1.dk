@@ -326,3 +326,11 @@ Fix: every spec that navigates to `/login.php` stubs the capability check off vi
 ```bash
 openssl s_client -connect ftp.simply.com:21 -starttls ftp -servername ftp.simply.com </dev/null 2>/dev/null | openssl x509 -noout -subject -ext subjectAltName
 ```
+
+## 28. A live deploy rolls back if Playwright's browser isn't installed on the deploying machine
+
+`deploy:live` runs `tests/e2e/01-smoke.spec.js` in a real browser after the upload (`deploy:test` runs only the HTTP smoke checks, so it never notices). `npm install`/`npm ci` does **not** download Playwright's browsers — after a fresh clone, a reinstalled `node_modules`, or a Playwright version bump, `~/.cache/ms-playwright/` can be missing the matching build. `global-setup.js` then fails launching Chromium, no tests run, and the deploy **rolls live back** even though the upload and HTTP smoke checks passed. The output shows `❌ Playwright error outside tests: … Executable doesn't exist at …` (printed by `onError` in `tests/reporter.js`) above `E2E setup failed — no tests ran`. Fix on that machine, then redeploy:
+
+```bash
+PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu22.04-x64 npx playwright install chromium
+```

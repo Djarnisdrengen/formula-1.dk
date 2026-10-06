@@ -28,6 +28,7 @@
 - [24. A hand-built POST to a bulk-delete/bulk-update handler needs `ids[]`, not repeated `ids`](#24-a-hand-built-post-to-a-bulk-deletebulk-update-handler-needs-ids-not-repeated-ids)
 - [25. Sessions are DB-backed, not PHP's default file sessions](#25-sessions-are-db-backed-not-phps-default-file-sessions)
 - [26. Conditional-mediation WebAuthn must stay scoped to login.php, and e2e specs must stub it off](#26-conditional-mediation-webauthn-must-stay-scoped-to-loginphp-and-e2e-specs-must-stub-it-off)
+- [27. FTP deploys use FTPS against ftp.simply.com — the host must match the certificate](#27-ftp-deploys-use-ftps-against-ftpsimplycom--the-host-must-match-the-certificate)
 
 ---
 
@@ -317,3 +318,11 @@ Two independent e2e traps follow from the same feature:
 - Plain headless Chromium reports `isConditionalMediationAvailable()` as `true` even with **no** virtual authenticator attached at all — enough on its own to fire a background `login_options` call and plant a fresh session challenge in a test that assumed none would exist.
 
 Fix: every spec that navigates to `/login.php` stubs the capability check off via `disableConditionalMediation(page)` (`tests/helpers/webauthn.js`), called before any `page.goto()`. `tests/e2e/auth/35-passkey.spec.js` and `36-passkey-negative.spec.js` both do this in `beforeEach`; the handful of tests written specifically to exercise the conditional path (`CU-01`/`CU-02`/`CU-04` in `35-passkey.spec.js`) re-enable it deliberately, per-test, after the blanket stub already ran.
+
+## 27. FTP deploys use FTPS against `ftp.simply.com` — the host must match the certificate
+
+`deploy.js`, `backup.js` and `rollback.js` connect with basic-ftp `secure: true` (explicit FTPS) and validate the server certificate — there is no `rejectUnauthorized: false` override. `FTP_HOST` in `build-deploy/.env` is `ftp.simply.com` (changed 2026-10-06 from the per-server name `linux350.unoeuro.com`, so a server move at Simply.com doesn't break deploys). Simply's certificate covers `*.simply.com` and `*.unoeuro.com`, so both names validate; an IP address or any other alias would fail the TLS hostname check. `build-deploy/.env` is per machine and not in git — change it on every machine you deploy from. To inspect the certificate:
+
+```bash
+openssl s_client -connect ftp.simply.com:21 -starttls ftp -servername ftp.simply.com </dev/null 2>/dev/null | openssl x509 -noout -subject -ext subjectAltName
+```

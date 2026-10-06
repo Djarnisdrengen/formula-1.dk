@@ -137,7 +137,7 @@ Run `npm run schema:check:live` **before** a deploy to confirm live has been mig
 `build-deploy/.env` holds **FTP credentials only** (never committed to git):
 
 ```env
-FTP_HOST=your-ftp-server.com
+FTP_HOST=ftp.simply.com
 FTP_USER=your-ftp-username
 FTP_PASS=your-ftp-password
 FTP_ROOT_TEST=/path/to/test/root

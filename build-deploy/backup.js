@@ -63,6 +63,7 @@ async function backup() {
             host: process.env.FTP_HOST,
             user: process.env.FTP_USER,
             password: process.env.FTP_PASS,
+            secure: true,
         });
         console.log(`\n📦 Backing up live site → build-deploy/backups/live/${timestamp}/`);
         await client.ensureDir(`${process.env.FTP_ROOT_LIVE}/public`);

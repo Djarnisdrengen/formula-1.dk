@@ -25,6 +25,7 @@ async function rollback(backupDir) {
             host: process.env.FTP_HOST,
             user: process.env.FTP_USER,
             password: process.env.FTP_PASS,
+            secure: true,
         });
         console.log("  ↑ Restoring files...");
         await uploadDir(client, backupDir, `${process.env.FTP_ROOT_LIVE}/public`);

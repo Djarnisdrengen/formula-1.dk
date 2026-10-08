@@ -16,7 +16,6 @@ jobs:
     env:
       DEPLOY_ENV: test
       EMAIL_BACKEND: intercept
-      PLAYWRIGHT_HOST_PLATFORM_OVERRIDE: ubuntu22.04-x64
       # BASE_URL_TEST already exists as a repo Variable (used by the cron trigger workflows).
       BASE_URL_TEST: ${{ vars.BASE_URL_TEST }}
       # New — see "Required Configuration" in docs/github-actions.md.

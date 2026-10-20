@@ -1793,7 +1793,7 @@ body.light .logo-light { display: block; }
    <details> dropdown on mobile. One shared pattern for both nav levels
    (area switcher across admin.php/admin-challenges.php/admin-dashboards.php,
    and each page's own per-tab row) via renderAdminTabRow() in
-   admin-area-nav.php — see epics/Admin area redesign/plan.md decisions 1/2.
+   admin-area-nav.php — see epics/Archive/Admin area redesign/plan.md decisions 1/2.
    Container query (not a viewport media query) because the shell's real
    available width depends on where it's embedded, not the viewport.
    ============================================================ */
@@ -3932,7 +3932,7 @@ body.font-system {
    Dashboards layout primitives — one canonical card/header set shared
    by all five Dashboards tabs (was .gha-stat-card/.dash-status-card/
    .gha-detail-card/.gha-runs-card, four near-duplicate wrapper classes
-   with the same chrome). See epics/Admin area redesign/plan.md decision 4.
+   with the same chrome). See epics/Archive/Admin area redesign/plan.md decision 4.
    ============================================================ */
 .admin-page-header {
     display: flex;
@@ -4157,7 +4157,7 @@ body.font-system {
    Dashboards area — shared primitives for the newer tabs
    (PaddockKB, Nøgler & Rotation, Challenges usage, Oversigt).
    Reuses .stat-card-grid/.stat-card/.section-card/.gha-empty/.gha-pill
-   etc. directly (see epics/Admin area redesign/plan.md decision 4) —
+   etc. directly (see epics/Archive/Admin area redesign/plan.md decision 4) —
    only genuinely new primitives (progress bars, KPI tiles) live here.
    ============================================================ */
 .dash-progress-track { height: 8px; border-radius: 4px; background: var(--bg-hover); overflow: hidden; }
@@ -4187,7 +4187,7 @@ body.font-system {
    original single-row grid; mobile (below) remaps the same items into icon+name /
    progress bar / badge+action lines instead of squeezing 5 fixed columns into one
    unreadable sliver — see "Admin Settings (standalone).html" in
-   epics/Admin area redesign for the mobile reference. */
+   epics/Archive/Admin area redesign for the mobile reference. */
 .dash-token-row {
     display: grid; grid-template-columns: 30px 1fr auto; grid-template-areas: "icon name meta";
     gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color);

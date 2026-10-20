@@ -45,7 +45,7 @@ test.describe('Admin two-tier nav', { tag: '@admin' }, () => {
         await expect(page.locator('[data-testid="admin-tab"]')).toHaveCount(8);
     });
 
-    // Container-query breakpoint — see epics/Admin area redesign/plan.md "Container-query
+    // Container-query breakpoint — see epics/Archive/Admin area redesign/plan.md "Container-query
     // breakpoint verification": .admin-shell reacts to its own width, not the viewport, but
     // these admin pages are single-column so viewport width tracks it directly (minus the
     // .hf-container padding). Checked on both nav levels independently since each sits in its

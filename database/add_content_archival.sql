@@ -1,4 +1,4 @@
--- Real expiry & rotation for content-topup (epics/Real expiry & rotation for content-topup/).
+-- Real expiry & rotation for content-topup (epics/Archive/Real expiry & rotation for content-topup/).
 -- Adds an 'archived' status to Rumor or Not items and Trivia questions so stale published
 -- content-topup output can roll off without ever being deleted (challenge_answers /
 -- challenge_trivia_answers / challenge_points stay intact — see feature-1's REQ-601).

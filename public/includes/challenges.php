@@ -794,7 +794,7 @@ function sendDuelOutcomeEmails(PDO $db, array $duel, int $challengerScore, int $
 // Archives stale published content-topup output — a status flip to 'archived', never a row
 // delete, so challenge_answers/challenge_trivia_answers/challenge_points (none ON DELETE
 // CASCADEd by this) stay intact forever (REQ-601). See
-// epics/Real expiry & rotation for content-topup/feature-1-content-expiry-archival.md.
+// epics/Archive/Real expiry & rotation for content-topup/feature-1-content-expiry-archival.md.
 if (!defined('RUMOR_STALE_WEEKS')) define('RUMOR_STALE_WEEKS', 6);
 if (!defined('RUMOR_MIN_LIVE'))    define('RUMOR_MIN_LIVE', 6);
 

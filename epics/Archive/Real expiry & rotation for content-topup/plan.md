@@ -211,8 +211,8 @@ for REQ-7xx/NFR-7xx and full Gherkin scenarios.
 
 **New:**
 - `database/add_content_archival.sql` — adds `'archived'` to both status enums (Feature 1).
-- `epics/Real expiry & rotation for content-topup/feature-1-content-expiry-archival.md`
-- `epics/Real expiry & rotation for content-topup/feature-2-content-health-dashboard.md`
+- `epics/Archive/Real expiry & rotation for content-topup/feature-1-content-expiry-archival.md`
+- `epics/Archive/Real expiry & rotation for content-topup/feature-2-content-health-dashboard.md`
 
 **Edited:**
 - `public/includes/challenges.php` — new `archiveStaleContent($db)`, `wouldEmptyLiveRumorDeck()`

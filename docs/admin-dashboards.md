@@ -26,7 +26,7 @@ The admin area is organized into three top-level areas — **Dashboards** (`admi
 Dashboards is the default landing page for the site header's "Admin" link. Core and Paddock
 Challenges are otherwise unchanged from before this feature; only their nav chrome was restyled.
 
-Since the Admin area redesign epic (`epics/Admin area redesign/plan.md`), one canonical layout-
+Since the Admin area redesign epic (`epics/Archive/Admin area redesign/plan.md`), one canonical layout-
 primitive set — nav rows, page headers, KPI stat cards, section wrappers, badges, buttons — spans
 all three areas; see [patterns.md → Admin Layout Primitives](patterns.md#admin-layout-primitives)
 for the shared conventions any new admin screen should reuse.
@@ -227,7 +227,7 @@ trivially 100%). See `epics/Admin settings and dashboards/feature-5-challenges-u
 
 ### Content Supply panel
 
-Added 2026-07-27 (`epics/Real expiry & rotation for content-topup/`) as a second panel on the same
+Added 2026-07-27 (`epics/Archive/Real expiry & rotation for content-topup/`) as a second panel on the same
 tab, below the usage panel above — not a new top-level tab. `chGetContentHealthSnapshot()`
 (`challenges-usage-lib.php`), still read-only, still no new schema:
 
@@ -274,7 +274,7 @@ have real cross-environment display to remove.
 `chGetUsageSnapshot()`'s `flagCount` (feeding the Oversigt tile) now reflects real Content Supply
 flags — overdue batch, blocked archival, low KB runway — instead of the previous hardcoded `0`.
 
-See `epics/Real expiry & rotation for content-topup/feature-2-content-health-dashboard.md` and
+See `epics/Archive/Real expiry & rotation for content-topup/feature-2-content-health-dashboard.md` and
 `docs/paddock-challenges-reference.md`'s "Content expiry & archival" section for the archival
 engine this panel reports on.
 

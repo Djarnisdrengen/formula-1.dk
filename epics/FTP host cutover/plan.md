@@ -20,7 +20,7 @@ another server, and it is the hostname Simply documents.
 | `.github/workflows/*` | no FTP use | none |
 | `build-deploy/.env.example`, `DEPLOYMENT.md` | placeholder only | set the example to `FTP_HOST=ftp.simply.com` |
 | `docs/gotchas.md` | — | add one line: FTP host is `ftp.simply.com`, FTPS required |
-| `epics/Test site domain migration/*` mentions of `linux350` | historical | leave as they are (they record history) |
+| `epics/Archive/Test site domain migration/*` mentions of `linux350` | historical | leave as they are (they record history) |
 
 FTP user, password and the roots (`FTP_ROOT_TEST=/test.formula-1.dk`, `FTP_ROOT_LIVE`) stay
 the same. Only the host changes.

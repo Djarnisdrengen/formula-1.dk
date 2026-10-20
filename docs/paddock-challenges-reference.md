@@ -151,7 +151,7 @@ directly against recent content) remains the deeper mitigation.**
 
 ## Content expiry & archival — stale content rotates out automatically
 
-Added 2026-07-27 (`epics/Real expiry & rotation for content-topup/`). Since the content pipeline
+Added 2026-07-27 (`epics/Archive/Real expiry & rotation for content-topup/`). Since the content pipeline
 above never expired anything, `challenge_items`/`challenge_trivia_questions` grew unbounded —
 every Friday's batch stacked on top of the last, forever. Both tables' `status` enum gained a
 third value, `'archived'` (migration `database/add_content_archival.sql`), alongside

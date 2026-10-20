@@ -2,7 +2,7 @@
 
 Sequenced, verifiable rollout for `plan.md`'s two features. Each phase lands, deploys to **test**,
 and is verified against its own relevant test coverage before the next phase starts — same
-incremental discipline as the Admin area redesign epic (`epics/Admin area redesign/plan.md`,
+incremental discipline as the Admin area redesign epic (`epics/Archive/Admin area redesign/plan.md`,
 decision 8), not a big-bang change. **Live deploy is a separate, explicitly user-directed step**
 after all phases are green on test (per the existing live-deploy-gate convention) — not implied by
 any phase below.

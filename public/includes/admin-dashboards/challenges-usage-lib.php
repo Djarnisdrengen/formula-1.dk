@@ -31,7 +31,7 @@ function chGetUsageSnapshot(PDO $db): array {
 // ============================================
 // CONTENT HEALTH (Real expiry & rotation for content-topup — Feature 2)
 // ============================================
-// See epics/Real expiry & rotation for content-topup/feature-2-content-health-dashboard.md.
+// See epics/Archive/Real expiry & rotation for content-topup/feature-2-content-health-dashboard.md.
 if (!defined('KB_RUNWAY_LOW_WEEKS'))        define('KB_RUNWAY_LOW_WEEKS', 4);
 if (!defined('CONTENT_TOPUP_OVERDUE_HOURS')) define('CONTENT_TOPUP_OVERDUE_HOURS', 7 * 24 + 6); // 1 week + 6h grace
 if (!defined('KB_WEEKLY_DRAW_RATE'))        define('KB_WEEKLY_DRAW_RATE', 6.0); // fallback when the actual per-env setting isn't known (see chGetContentHealthSnapshot())

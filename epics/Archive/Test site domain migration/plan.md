@@ -402,7 +402,7 @@ before proceeding, per CLAUDE.md's f1-intelligence rule or this epic's own destr
       `docs/commands.md`, `docs/test-strategy.md`) or (b) intentionally-excluded historical record —
       `epics/Archive/**`, this epic's own planning docs (`plan.md`, `feature-1-*.md`, `feature-2-*.md`,
       `test-strategy-review.md` — describing the pre-migration state by design), the frozen
-      design-handoff mockup exports under `epics/Admin area redesign/` (static point-in-time HTML
+      design-handoff mockup exports under `epics/Archive/Admin area redesign/` (static point-in-time HTML
       snapshots with baked-in example values, not living docs), and the completed-work changelog
       entries in `security-findings-remaining.md` / `paddock-rumors/SESSION_HANDOVER.md`. Category
       (c) is empty. Two comment-only hostname mentions were also found and fixed along the way in

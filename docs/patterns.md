@@ -376,7 +376,7 @@ Any new preference toggle added in future must follow the same current-state con
 
 One shared chrome — navigation, headers, KPI cards, section wrappers, buttons — spans all three
 admin areas (Core `admin.php`, Paddock Challenges `admin-challenges.php`, Dashboards
-`admin-dashboards.php`). Introduced by `epics/Admin area redesign/plan.md`; reuse these on any new
+`admin-dashboards.php`). Introduced by `epics/Archive/Admin area redesign/plan.md`; reuse these on any new
 admin screen instead of re-deriving colors or copy-pasting a tab row by hand.
 
 **Tab navigation — `renderAdminTabRow()`:**
@@ -400,7 +400,7 @@ the shared `.hf-container`, whose own responsive tiers pin content width at a co
 the entire 768–1023px viewport range (only widening at the site's 1024px breakpoint) — so in
 practice the flat `.admin-tabs` row only appears at ≥1024px viewport width, and the dropdown covers
 everything below that. Confirmed and accepted as-is during the redesign epic's Phase 5 visual pass
-(see `epics/Admin area redesign/plan.md`) rather than chasing the literal 720px value — don't assume
+(see `epics/Archive/Admin area redesign/plan.md`) rather than chasing the literal 720px value — don't assume
 resizing to just over 720px viewport width will show the flat row on a page nested in
 `.hf-container`.
 

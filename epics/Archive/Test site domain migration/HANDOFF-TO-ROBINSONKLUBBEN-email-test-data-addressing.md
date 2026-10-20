@@ -153,4 +153,4 @@ using `+`-addressing off its existing catch-all — no manual mailbox provisioni
 | `public/tools/test-seed.php` | ~35 fixture literals, `cleanup_passkeys`/`set_passkey_sign_count` guards |
 | `docs/gotchas.md` | gotcha #15 (full rewrite), gotcha #14 (dedup note extended) |
 | `docs/testing.md`, `docs/test-strategy.md`, `docs/commands.md` | fixture-address tables/examples |
-| `epics/Test site domain migration/plan.md` | Phase 9b write-up — full decision rationale |
+| `epics/Archive/Test site domain migration/plan.md` | Phase 9b write-up — full decision rationale |

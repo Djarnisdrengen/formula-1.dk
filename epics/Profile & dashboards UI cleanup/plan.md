@@ -11,9 +11,9 @@
 
 Produced via `/web-architecture-review`, adapted to this project's actual conventions (procedural
 PHP, no framework, no MVC/repository layers). There is no design handoff for this work (unlike
-`epics/Admin area redesign/plan.md`'s `Admin Settings.dc.html`) — scope was derived directly from
+`epics/Archive/Admin area redesign/plan.md`'s `Admin Settings.dc.html`) — scope was derived directly from
 auditing the current codebase against the conventions the prior two redesign epics already
-established: `epics/Admin area redesign/plan.md` (nav framework + layout primitives, all 5 phases
+established: `epics/Archive/Admin area redesign/plan.md` (nav framework + layout primitives, all 5 phases
 shipped to TEST 2026-07-26 / LIVE 2026-07-27, see `docs/patterns.md` → "Admin Layout Primitives")
 and `epics/Archive/redesign-profile-stats/` (the points-hero + status-chips stats block on
 `profile.php`, shipped v2.2.0).
@@ -80,13 +80,13 @@ structural cleanup only, same framing the prior admin epic used.
 
 4. **Keys & Rotation mobile fix — CORRECTED 2026-09-09: the CSS work is already done; only the
    regression test is missing.** This decision originally proposed picking up two Deferred items from
-   `epics/Admin area redesign/plan.md` (a hardcoded `130px 1fr` wrapper squeezing `.stat-card-grid`
+   `epics/Archive/Admin area redesign/plan.md` (a hardcoded `130px 1fr` wrapper squeezing `.stat-card-grid`
    beside the health ring at 375px, and long secret-name labels like `INTEGRATION_SEED_TOKEN`
    truncating against their "OK" badge). **Both were already fixed** by commit `7058fee`
    ("Nøgler & Rotation: mobile-responsive token/secret rows + KPI grid", 2026-07-27) — one day after
    the prior epic's Phase 5 closed, in an out-of-epic commit. `style.css:4184-4256` now carries named
    grid-areas (`.dash-token-row`, `.dash-secret-row`, `.dash-kpi-row`) plus a `@media (max-width:768px)`
-   block, citing "epics/Admin area redesign/plan.md decision 4" in a comment at `style.css:4160`. The
+   block, citing "epics/Archive/Admin area redesign/plan.md decision 4" in a comment at `style.css:4160`. The
    prior epic's Deferred section is stale documentation and still describes the bug as open.
    **What remains:** `tests/e2e/admin/17-dashboards-nogler-rotation.spec.js` has zero
    `setViewportSize` calls, so the shipped fix has no automated regression coverage — add that test
@@ -261,7 +261,7 @@ structural cleanup only, same framing the prior admin epic used.
 Reviewed via `/test-strategy-manager`. The review re-ran decision 7's grep audit across the *full*
 `tests/e2e/` tree rather than trusting the first draft's file list, and found one real coverage gap
 plus a set of specs the first draft's decision 8 didn't account for at all — same pattern as the
-precedent epic's own test-strategy-manager pass (`epics/Admin area redesign/plan.md`'s Testing
+precedent epic's own test-strategy-manager pass (`epics/Archive/Admin area redesign/plan.md`'s Testing
 approach section), which corrected an under-scoped first draft rather than rubber-stamping it.
 
 **Scope reminder:** no PHPUnit, no new business logic anywhere in this epic — tests are Playwright
@@ -334,7 +334,7 @@ partial silently writing to the wrong place).
 `tests/e2e/admin/17-dashboards-nogler-rotation.spec.js` has zero `setViewportSize` calls — the entire
 spec runs at the default (desktop) viewport. This matches the prior epic's own account of how this
 issue was originally found: only a manual screenshot pass at 375/719/721/768/1024/1280px caught it
-(`epics/Admin area redesign/plan.md`, Phase 5), not automation — the precedent epic itself never added
+(`epics/Archive/Admin area redesign/plan.md`, Phase 5), not automation — the precedent epic itself never added
 a regression test for it, per its own Deferred section. The CSS fix itself shipped in `7058fee`
 (decision 4) but still carries no automated coverage, so the regression it guards against could
 silently return. **New scenario needed**: one `page.setViewportSize({width:375,

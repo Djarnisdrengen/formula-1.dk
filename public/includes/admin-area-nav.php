@@ -1,6 +1,6 @@
 <?php
 // Shared admin nav renderer — one function for both nav levels (see
-// epics/Admin area redesign/plan.md decision 1). Emits an `.admin-shell` container
+// epics/Archive/Admin area redesign/plan.md decision 1). Emits an `.admin-shell` container
 // holding both a desktop `.admin-tabs` row and a mobile `<details class="admin-dropdown">`;
 // CSS (container query on `.admin-shell`, name `admin-vp`) decides which is visible, so no
 // JS is needed for the open/close mechanic itself.

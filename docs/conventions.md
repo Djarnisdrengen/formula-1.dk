@@ -30,7 +30,7 @@ for live.
 
 **Origin:** established 2026-09 during F1Betting's test-site migration off `hpovlsen.dk`. If that
 project's repo is still around, its full history and rationale is in
-`epics/Test site domain migration/plan.md`.
+`epics/Archive/Test site domain migration/plan.md`.
 
 ## `hpovlsen.dk` is not decommissioned
 

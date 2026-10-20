@@ -1,7 +1,7 @@
 # Betting notifications catch-up: stop missing "Betting åbent" emails
 
-**Status:** plan only. Decisions 1.3, Phase 2 and 2.3 made 2026-10-20. Nothing is
-implemented; code changes start only on Djarnis's go.
+**Status:** plan only. All decisions made 2026-10-20 (1.3, Phase 2). Nothing is implemented;
+code changes start only on Djarnis's go.
 **Date:** 2026-10-20
 
 ## Why
@@ -62,8 +62,9 @@ The pool reminders to non-competing users and pending invites are sent in the sa
 - Email wording, templates, languages.
 - The Microsoft 365 link-domain issue on **test** (handled as a gotcha in Phase 3, no code).
 - Changing who receives what (in-competition users who haven't bet; pool reminders to the rest).
-- `import_qualifying.php` and the other cron jobs. They have their own windows and should be
-  reviewed separately (noted in Phase 3).
+- The scheduling logic of `import_qualifying.php` and the other cron jobs. They have their own
+  windows and should be reviewed separately (noted in Phase 3). The only change there is removing
+  `import_qualifying.php`'s old `?token=` shim (2.2).
 
 ---
 
@@ -227,65 +228,145 @@ npm run test:e2e:test        # full suite, before asking for the live deploy
 
 ---
 
-## Phase 2: a reliable trigger (cron-job.org)
+## Phase 2: a reliable trigger (Simply.com cron + per-job URL token, GitHub as backup)
 
-**Decided 2026-10-20 (Djarnis):** trigger `notifications.php` from **cron-job.org** instead of
-relying on GitHub's schedule. It can send the `Authorization: Bearer` header, so the F6 work (no
-secret in the query string) stays intact. Rejected: Simply.com control-panel cron (plain GET only,
-would need the `?token=` shim back).
+**Decided 2026-10-20 (Djarnis):** trigger `notifications.php` from **Simply.com's control-panel
+cron** (the site's own host), with **GitHub Actions kept as a backup**, and remove the GitHub
+schedule later once Simply's cron has proven itself.
 
-### 2.1 Set up cron-job.org (Djarnis, in the cron-job.org UI)
+Why Simply.com: it triggered the notifications until 2026-07-09, and in that period every race got
+its "Betting åbent" email (Monaco, Barcelona, Austrian, British). No new account or provider.
 
-One job per environment:
+Rejected:
+- **cron-job.org**: would work (it supports headers), but adds an outside service holding a secret.
+- **Gigahost.dk webhotel cron**: same limit as Simply (no custom headers) and on a different host,
+  so no advantage.
+
+**The constraint:** Simply's cron (and Gigahost's) can only send a plain GET. No headers, so the
+secret must be in the URL (`?token=…`). That is what F6 (`security-findings-remaining.md`) removed,
+because a URL ends up in access logs and the control panel. Today there is one `CRON_SECRET` for
+every cron endpoint, so leaking it would expose all of them (challenge purge, qualifying import,
+session GC, …).
+
+**The answer: a separate secret per URL-triggered job.** Each job that a header-less cron calls
+gets its own token, accepted **only** by that one endpoint and **only** as `?token=`. If it leaks,
+the worst case is that someone runs that one job early. After Phase 1, the notification job only
+sends what is already due, and only once, so an extra run does nothing.
+
+### 2.1 Per-job token: `NOTIFY_CRON_TOKEN`
+
+- New constant in `config.test.php` and `config.live.php`, **different** values, 64 hex chars
+  (`php -r "echo bin2hex(random_bytes(32));"`). Djarnis adds them by hand; Claude can't read or
+  write these files.
+- `config.example.php`: add a commented example under `// ── CRON ──`, explaining that it is the
+  URL token for the header-less Simply.com cron and works for `notifications.php` only.
+- `public/includes/functions.php`: a small helper next to `getBearerToken()`, reusable for any
+  future per-job token:
+
+  ```php
+  // Per-job URL token for header-less cron triggers (Simply.com control-panel cron).
+  // Accepted only by the one endpoint that names the constant, never as a Bearer token.
+  function cronUrlTokenValid(string $const): bool {
+      if (!defined($const) || strlen((string)constant($const)) < 32) return false;
+      $given = $_GET['token'] ?? null;
+      return is_string($given) && hash_equals(constant($const), $given);
+  }
+  ```
+
+  A missing or short constant means "not configured", so the URL route is simply off.
+- `public/cron/notifications.php`, HTTP branch:
+  - accept `Authorization: Bearer <CRON_SECRET>` (GitHub backup, manual runs), **or**
+    `cronUrlTokenValid('NOTIFY_CRON_TOKEN')` (Simply cron);
+  - **remove** the legacy `?token=<CRON_SECRET>` shim (the "F6 TEMPORARY SHIM" block). From now on
+    the shared secret is never accepted in a URL;
+  - `NOTIFY_CRON_TOKEN` sent as a Bearer header is **not** accepted (one token, one route);
+  - log which route triggered the run: `Run triggered by: github-bearer | simply-url-token | cli`
+    in `cron_notifications.log`, next to Phase 1.5's lines. That makes it visible which trigger
+    actually sent each race, which is the evidence needed for 2.5. The token itself is never logged.
+
+### 2.2 F6 clean-up for the other cron script
+
+`public/cron/import_qualifying.php` still has the same `?token=<CRON_SECRET>` shim, and it's only
+triggered by GitHub with the Bearer header. Remove the shim there too, so the shared secret is
+accepted in URLs nowhere. If the qualifying import later moves to Simply's cron, it gets its own
+`QUALIFYING_CRON_TOKEN` with the same helper.
+
+Update F6 in `security-findings-remaining.md`: shared-secret URL tokens removed everywhere; the one
+documented exception is the per-job `NOTIFY_CRON_TOKEN`, with the reason above.
+
+### 2.3 Set up the Simply.com cron (Djarnis, in Simply's control panel)
+
+Only after Phase 1 and 2.1 are deployed to that environment. One job per environment:
 
 | Field | Live | Test |
 | --- | --- | --- |
-| URL | `https://www.formula-1.dk/cron/notifications.php` | `https://www.formula-1.helvegpovlsen.dk/cron/notifications.php` |
-| Schedule | every hour at minute 23 (Europe/Copenhagen) | same |
-| Method | GET | GET |
-| Header | `Authorization: Bearer <CRON_SECRET from config.live.php>` | `Authorization: Bearer <CRON_SECRET from config.test.php>` |
-| Timeout | 30 s | 30 s |
-| Notify on failure | on (email to Djarnis) | on |
-| Save responses | on, so the output (`Betting opened for: …`) can be read there | on |
+| URL | `https://www.formula-1.dk/cron/notifications.php?token=<NOTIFY_CRON_TOKEN from config.live.php>` | `https://www.formula-1.helvegpovlsen.dk/cron/notifications.php?token=<NOTIFY_CRON_TOKEN from config.test.php>` |
+| Interval | every hour | every hour |
+| Minute (if the panel lets you choose) | about `:53`, so it lands ~30 min away from GitHub's `:23` | same |
 
-Always `www` (gotcha: non-www redirects with 301). Check: the job's first run shows HTTP 200 and
-`Notification check complete.` in the saved response.
+Always `www` (non-www 301-redirects). Check afterwards: within an hour `cron_notifications.log`
+shows `Run triggered by: simply-url-token`.
 
-### 2.2 Record the new copy of `CRON_SECRET`
+Simply's cron probably doesn't email on failure or keep responses. Covered by: the GitHub backup
+(2.4), and the log lines from 1.5 and 2.1. A later nice-to-have (not in this plan): a "last
+notification run" line in the nightly report.
 
-`CRON_SECRET` now lives in one more place. Add a note to the Nøgler & Rotation dashboard entry
-for `CRON_SECRET` (`public/includes/admin-dashboards/nogler-rotation-lib.php`, record-only like
-`RESEND_API_KEY`) and to `docs/admin-dashboards.md`: rotating it means updating config.php,
-the GitHub secret (if the workflow stays) **and** the cron-job.org job header.
+### 2.4 GitHub Actions as backup (`cron-notifications.yml`)
 
-### 2.3 The GitHub schedule in `cron-notifications.yml`
-
-**Decided 2026-10-20 (Djarnis): keep it as a backup**, schedule moved from minute `1` to `23`.
-Both triggers run; Phase 1's claim (1.4) makes double sends impossible, and if cron-job.org is
-down the emails still go out (late) via GitHub.
-
-**Later: remove the GitHub schedule** once cron-job.org has proven itself, for simplicity (one
-trigger, one less copy of `CRON_SECRET` in active use). Criterion: about a month / 4 race weekends
-where cron-job.org's history shows every hourly run with HTTP 200 and each race's "Betting opened
-for" line came from a cron-job.org run (`:23` on its own clock), not from GitHub. Tracked in
-[Djarnisdrengen/formula-1.dk#204](https://github.com/Djarnisdrengen/formula-1.dk/issues/204).
-
-Either way `workflow_dispatch` (manual run, incl. dry run) stays.
+**Decided 2026-10-20 (Djarnis): keep the schedule as a backup**, moved from minute `1` to `23`
+(GitHub drops more runs near the top of the hour). Both triggers run; Phase 1's claim (1.4) makes
+double sends impossible, and if Simply's cron stops, emails still go out (later) via GitHub. The
+workflow keeps using `Authorization: Bearer CRON_SECRET`. `workflow_dispatch` (manual run, incl.
+dry run) stays.
 
 Side note: since ~Aug 27 the repo also runs `cron-warm-actions-cache.yml` every 5 minutes and
 `cron-session-gc.yml` hourly at `:00`. I can't tell from the shallow clone whether these coincide
 with the drop, and GitHub doesn't document per-repo schedule throttling. Worth a look, not
 assumed to be the cause.
 
+### 2.5 Later: remove the GitHub schedule
+
+For simplicity (one trigger), once Simply's cron has proven itself. Criterion: about a month /
+4 race weekends where `cron_notifications.log` shows `Run triggered by: simply-url-token` every
+hour, and each race's `Betting opened for:` line came from a Simply run. Then remove `schedule:`
+from `cron-notifications.yml` (keep `workflow_dispatch`) and update the docs. Tracked in
+[Djarnisdrengen/formula-1.dk#204](https://github.com/Djarnisdrengen/formula-1.dk/issues/204).
+
+### 2.6 Nøgler & Rotation
+
+Add `NOTIFY_CRON_TOKEN` as a **record-only** entry (like `RESEND_API_KEY`) in
+`public/includes/admin-dashboards/nogler-rotation-lib.php` and `docs/admin-dashboards.md`.
+Rotation is manual: new value in `config.<env>.php`, deploy, then paste the new URL into Simply's
+cron for that environment. `CRON_SECRET`'s existing auto-rotation is unchanged (it is no longer
+used in any URL).
+
+### Phase 2 tests (`tests/e2e/07-cron.spec.js`, "notifications — access control")
+
+`build-deploy/php-config.js` reads `NOTIFY_CRON_TOKEN` and `tests/playwright.config.js` exposes it
+as `process.env.NOTIFY_CRON_TOKEN`, like `CRON_SECRET` today.
+
+| # | Request | Expected |
+| --- | --- | --- |
+| A1 | `?token=<NOTIFY_CRON_TOKEN>` | `Notification check complete` |
+| A2 | `?token=<CRON_SECRET>` (old shim) | `Unauthorized access` |
+| A3 | `?token=wrong` | `Unauthorized access` |
+| A4 | `Authorization: Bearer <NOTIFY_CRON_TOKEN>` | `Unauthorized access` |
+| A5 | `Authorization: Bearer <CRON_SECRET>` | `Notification check complete` (existing test) |
+| A6 | `import_qualifying.php?token=<CRON_SECRET>` | `Unauthorized access` (2.2) |
+
 ---
 
 ## Phase 3: docs
 
-- `docs/cron-jobs.md`: the trigger is now cron-job.org (section "Triggering via GitHub Actions"
-  updated to match 2.3), and § 2 Email Notifications describes the new catch-up rules, the markers, the
+- `docs/cron-jobs.md`: the triggers are now Simply.com cron (URL + `NOTIFY_CRON_TOKEN`) with
+  GitHub as backup; the "temporary `?token=` shim" text goes away; a new "Per-job URL tokens"
+  paragraph explains the rule (one token per header-less job, accepted only by that endpoint);
+  and § 2 Email Notifications describes the new catch-up rules, the markers, the
   "skip open inside closing window" rule, and that test mode never writes.
-- `docs/github-actions.md`: the `cron-notifications.yml` entry, per 2.3.
+- `docs/github-actions.md`: the `cron-notifications.yml` entry is now the backup trigger at `:23`.
 - `docs/gotchas.md`, new entries:
+  - **Header-less crons (Simply.com, Gigahost) need a per-job URL token**, never the shared
+    `CRON_SECRET`.
   - **GitHub Actions schedules are best-effort.** A job that only acts inside a narrow time window
     will silently skip. Use "has it been done yet?" markers instead of "is it exactly time now?".
     Includes this incident's numbers.
@@ -301,20 +382,25 @@ assumed to be the cause.
 
 ## Order of work and gates
 
-1. Djarnis approves this plan. Decided: 1.3 keep 3 h; Phase 2 cron-job.org. 2.3 keep GitHub
-   as backup at :23.
-2. Phase 1 code + tests + Phase 3 docs on the working branch.
-3. Run `add_race_notification_tracking.sql` on **test** via phpMyAdmin → `npm run deploy:test`
+1. Djarnis approves this plan. Decided 2026-10-20: 1.3 keep the 3 h window; Phase 2 Simply.com
+   cron with a per-job token; GitHub as backup at `:23`; remove GitHub later (#204).
+2. Djarnis adds `NOTIFY_CRON_TOKEN` to `config.test.php` (and `config.live.php`, different value).
+3. Phase 1 + Phase 2 code, tests and Phase 3 docs on the working branch.
+4. Run `add_race_notification_tracking.sql` on **test** via phpMyAdmin → `npm run deploy:test`
    (schema check must pass) → run the cron spec, then the full e2e suite.
-4. Djarnis picks a deploy slot per 1.7 → run the SQL on **live** → `npm run deploy:live` (only on
-   Djarnis's go) → `npm run schema:check:live`.
-5. Watch the next race weekend: the GitHub Actions log and `cron_notifications.log` should show
-   `Betting opened for: …` exactly once, with its lateness. Check Proton Sent for one player.
-6. After Phase 1 is live, Djarnis sets up the cron-job.org jobs (2.1), test first. The
-   claim in 1.4 makes it safe to have them running alongside GitHub during the switch.
+5. Djarnis creates the **test** Simply cron job (2.3). Check `Run triggered by: simply-url-token`
+   in test's `cron_notifications.log`.
+6. Djarnis picks a live deploy slot per 1.7 → run the SQL on **live** → `npm run deploy:live` (only
+   on Djarnis's go) → `npm run schema:check:live` → create the **live** Simply cron job (2.3).
+7. Watch the next race weekend: `cron_notifications.log` shows `Betting opened for: …` exactly
+   once, with its lateness and which trigger sent it. Check Proton Sent for one player.
+8. After about a month / 4 race weekends of clean Simply runs: do #204 (remove the GitHub
+   schedule).
 
 ## Rollback
 
+- Trigger: if Simply's cron misbehaves, delete the job in Simply's panel; the GitHub backup keeps
+  running. Note that rolling back the code also brings back the old `?token=<CRON_SECRET>` shim.
 - Code: `node build-deploy/rollback.js` (or redeploy the previous commit). `deploy:live` also
   rolls back by itself if its tests fail. The old code ignores the new columns.
 - DB: the columns can stay; they're harmless to the old code. To remove them:
@@ -328,10 +414,16 @@ assumed to be the cause.
 | `database/add_race_notification_tracking.sql` | new migration + backfill |
 | `database/schema.sql` | two columns on `races` |
 | `database/migrations.json` | register the columns |
-| `public/cron/notifications.php` | catch-up rules, claim, test-mode read-only, logging |
+| `public/cron/notifications.php` | catch-up rules, claim, test-mode read-only, logging; auth: Bearer `CRON_SECRET` or `?token=NOTIFY_CRON_TOKEN`, old shim removed |
+| `public/cron/import_qualifying.php` | remove the `?token=CRON_SECRET` shim (2.2) |
+| `public/includes/functions.php` | `cronUrlTokenValid()` helper |
+| `config.example.php` | commented `NOTIFY_CRON_TOKEN` example |
+| `build-deploy/php-config.js`, `tests/playwright.config.js` | expose `NOTIFY_CRON_TOKEN` to tests |
 | `public/admin.php` | reset markers when a race's date/time changes |
 | `public/tools/test-seed.php` | 2 seed + 2 cleanup actions |
-| `tests/e2e/07-cron.spec.js` | T1–T6 |
-| `.github/workflows/cron-notifications.yml` | minute `1` → `23` (backup trigger, 2.3) |
-| `public/includes/admin-dashboards/nogler-rotation-lib.php`, `docs/admin-dashboards.md` | note the cron-job.org copy of `CRON_SECRET` (2.2) |
+| `tests/e2e/07-cron.spec.js` | T1–T6, A1–A6 |
+| `.github/workflows/cron-notifications.yml` | minute `1` → `23` (backup trigger, 2.4) |
+| `public/includes/admin-dashboards/nogler-rotation-lib.php`, `docs/admin-dashboards.md` | record-only `NOTIFY_CRON_TOKEN` entry (2.6) |
+| `security-findings-remaining.md` | F6: shim gone, per-job token exception documented |
 | `docs/cron-jobs.md`, `docs/gotchas.md`, `docs/github-actions.md` | Phase 3 |
+| Not in git (Djarnis) | `NOTIFY_CRON_TOKEN` in `config.test.php` / `config.live.php`; Simply cron jobs |

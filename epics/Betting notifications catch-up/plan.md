@@ -1,6 +1,6 @@
 # Betting notifications catch-up: stop missing "Betting åbent" emails
 
-**Status:** plan only. Decisions 1.3 and Phase 2 made 2026-10-20; 2.3 still open. Nothing is
+**Status:** plan only. Decisions 1.3, Phase 2 and 2.3 made 2026-10-20. Nothing is
 implemented; code changes start only on Djarnis's go.
 **Date:** 2026-10-20
 
@@ -260,11 +260,15 @@ the GitHub secret (if the workflow stays) **and** the cron-job.org job header.
 
 ### 2.3 The GitHub schedule in `cron-notifications.yml`
 
-**Open, waiting for Djarnis.** Options:
+**Decided 2026-10-20 (Djarnis): keep it as a backup**, schedule moved from minute `1` to `23`.
+Both triggers run; Phase 1's claim (1.4) makes double sends impossible, and if cron-job.org is
+down the emails still go out (late) via GitHub.
 
-- **Keep it as a backup**, schedule moved from minute `1` to `23`. Both triggers run; Phase 1's
-  claim (1.4) makes double sends impossible.
-- **Remove the `schedule:`** and keep only `workflow_dispatch` for manual runs.
+**Later: remove the GitHub schedule** once cron-job.org has proven itself, for simplicity (one
+trigger, one less copy of `CRON_SECRET` in active use). Criterion: about a month / 4 race weekends
+where cron-job.org's history shows every hourly run with HTTP 200 and each race's "Betting opened
+for" line came from a cron-job.org run (`:23` on its own clock), not from GitHub. Tracked in
+[Djarnisdrengen/formula-1.dk#204](https://github.com/Djarnisdrengen/formula-1.dk/issues/204).
 
 Either way `workflow_dispatch` (manual run, incl. dry run) stays.
 
@@ -297,8 +301,8 @@ assumed to be the cause.
 
 ## Order of work and gates
 
-1. Djarnis approves this plan. Decided: 1.3 keep 3 h; Phase 2 cron-job.org. Still open: 2.3
-   (keep or remove the GitHub schedule).
+1. Djarnis approves this plan. Decided: 1.3 keep 3 h; Phase 2 cron-job.org. 2.3 keep GitHub
+   as backup at :23.
 2. Phase 1 code + tests + Phase 3 docs on the working branch.
 3. Run `add_race_notification_tracking.sql` on **test** via phpMyAdmin → `npm run deploy:test`
    (schema check must pass) → run the cron spec, then the full e2e suite.
@@ -328,6 +332,6 @@ assumed to be the cause.
 | `public/admin.php` | reset markers when a race's date/time changes |
 | `public/tools/test-seed.php` | 2 seed + 2 cleanup actions |
 | `tests/e2e/07-cron.spec.js` | T1–T6 |
-| `.github/workflows/cron-notifications.yml` | per 2.3: minute `1` → `23`, or remove `schedule:` |
+| `.github/workflows/cron-notifications.yml` | minute `1` → `23` (backup trigger, 2.3) |
 | `public/includes/admin-dashboards/nogler-rotation-lib.php`, `docs/admin-dashboards.md` | note the cron-job.org copy of `CRON_SECRET` (2.2) |
 | `docs/cron-jobs.md`, `docs/gotchas.md`, `docs/github-actions.md` | Phase 3 |

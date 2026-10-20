@@ -1,6 +1,7 @@
 # Betting notifications catch-up: stop missing "Betting åbent" emails
 
-**Status:** plan only, waiting for Djarnis's OK. Nothing is implemented.
+**Status:** plan only. Decisions 1.3 and Phase 2 made 2026-10-20; 2.3 still open. Nothing is
+implemented; code changes start only on Djarnis's go.
 **Date:** 2026-10-20
 
 ## Why
@@ -124,12 +125,10 @@ CLOSING, when closing_notified_at IS NULL and closingFrom <= now < raceStart:
 The rule "skip open if we're already inside the closing window" stops a very late run (or the
 first run after a long outage) from sending "betting is open" and "closes soon" in the same minute.
 
-**Open question for Djarnis (decide before implementing):** with runs only ~5 times a day, a
-"closing soon" email could arrive anywhere from 3 h to just minutes before the race, or be
-missed entirely if no run falls in those 3 hours. Options:
-- **(a)** keep 3 h, and fix the trigger in Phase 2 so runs are hourly again (recommended);
-- **(b)** widen to e.g. 6 h, which changes the email's meaning slightly ("closes today");
-- **(c)** add a floor: don't send if less than 30 min remain, and just mark it as sent.
+**Decided 2026-10-20 (Djarnis): keep the 3 h window** and fix the trigger in Phase 2 so runs are
+hourly again. Rejected: widening to ~6 h, or a "skip if < 30 min left" floor. With ~5 runs a day
+a "closing soon" email could arrive minutes before the race or be missed; reliable hourly runs
+are the fix for that.
 
 ### 1.4 Claim before sending, so two runs can't double-send
 
@@ -228,21 +227,46 @@ npm run test:e2e:test        # full suite, before asking for the live deploy
 
 ---
 
-## Phase 2: a more reliable trigger (decision for Djarnis)
+## Phase 2: a reliable trigger (cron-job.org)
 
-Phase 1 makes late runs harmless, but "closing soon" still needs a run inside its 3-hour window,
-and "open" can still be several hours late. Options:
+**Decided 2026-10-20 (Djarnis):** trigger `notifications.php` from **cron-job.org** instead of
+relying on GitHub's schedule. It can send the `Authorization: Bearer` header, so the F6 work (no
+secret in the query string) stays intact. Rejected: Simply.com control-panel cron (plain GET only,
+would need the `?token=` shim back).
 
-| Option | Reliability | Cost / risk |
+### 2.1 Set up cron-job.org (Djarnis, in the cron-job.org UI)
+
+One job per environment:
+
+| Field | Live | Test |
 | --- | --- | --- |
-| **A. Keep GitHub schedule only** | ~5 runs/day now, varies | Free. "Open" late by up to ~6 h; "closing soon" sometimes missed. |
-| **B. External cron service** (e.g. cron-job.org, supports a custom `Authorization` header) | Usually on time | Another account holding a copy of `CRON_SECRET`; add it to Nøgler & Rotation as a record-only secret. |
-| **C. Simply.com control-panel cron** | On time | Only sends plain GET with no headers, so it needs the `?token=` shim that F6 wants to remove. Not recommended. |
-| **D. Move the schedule off minute `:01`** to e.g. `:23` | Might help a little | Free. GitHub drops more runs near the top of the hour. Cheap to try first. |
+| URL | `https://www.formula-1.dk/cron/notifications.php` | `https://www.formula-1.helvegpovlsen.dk/cron/notifications.php` |
+| Schedule | every hour at minute 23 (Europe/Copenhagen) | same |
+| Method | GET | GET |
+| Header | `Authorization: Bearer <CRON_SECRET from config.live.php>` | `Authorization: Bearer <CRON_SECRET from config.test.php>` |
+| Timeout | 30 s | 30 s |
+| Notify on failure | on (email to Djarnis) | on |
+| Save responses | on, so the output (`Betting opened for: …`) can be read there | on |
 
-Recommendation: **D now** (one-line change, together with Phase 1), and **B only if** Phase 1.5's
-logging still shows long delays after a few race weekends. With Phase 1 in place, running both
-GitHub and an external trigger is safe (the claim in 1.4 prevents double sends).
+Always `www` (gotcha: non-www redirects with 301). Check: the job's first run shows HTTP 200 and
+`Notification check complete.` in the saved response.
+
+### 2.2 Record the new copy of `CRON_SECRET`
+
+`CRON_SECRET` now lives in one more place. Add a note to the Nøgler & Rotation dashboard entry
+for `CRON_SECRET` (`public/includes/admin-dashboards/nogler-rotation-lib.php`, record-only like
+`RESEND_API_KEY`) and to `docs/admin-dashboards.md`: rotating it means updating config.php,
+the GitHub secret (if the workflow stays) **and** the cron-job.org job header.
+
+### 2.3 The GitHub schedule in `cron-notifications.yml`
+
+**Open, waiting for Djarnis.** Options:
+
+- **Keep it as a backup**, schedule moved from minute `1` to `23`. Both triggers run; Phase 1's
+  claim (1.4) makes double sends impossible.
+- **Remove the `schedule:`** and keep only `workflow_dispatch` for manual runs.
+
+Either way `workflow_dispatch` (manual run, incl. dry run) stays.
 
 Side note: since ~Aug 27 the repo also runs `cron-warm-actions-cache.yml` every 5 minutes and
 `cron-session-gc.yml` hourly at `:00`. I can't tell from the shallow clone whether these coincide
@@ -253,8 +277,10 @@ assumed to be the cause.
 
 ## Phase 3: docs
 
-- `docs/cron-jobs.md` § 2 Email Notifications: describe the new catch-up rules, the markers, the
+- `docs/cron-jobs.md`: the trigger is now cron-job.org (section "Triggering via GitHub Actions"
+  updated to match 2.3), and § 2 Email Notifications describes the new catch-up rules, the markers, the
   "skip open inside closing window" rule, and that test mode never writes.
+- `docs/github-actions.md`: the `cron-notifications.yml` entry, per 2.3.
 - `docs/gotchas.md`, new entries:
   - **GitHub Actions schedules are best-effort.** A job that only acts inside a narrow time window
     will silently skip. Use "has it been done yet?" markers instead of "is it exactly time now?".
@@ -271,7 +297,8 @@ assumed to be the cause.
 
 ## Order of work and gates
 
-1. Djarnis approves this plan and answers the open question in 1.3 (a/b/c) and Phase 2 (D now?).
+1. Djarnis approves this plan. Decided: 1.3 keep 3 h; Phase 2 cron-job.org. Still open: 2.3
+   (keep or remove the GitHub schedule).
 2. Phase 1 code + tests + Phase 3 docs on the working branch.
 3. Run `add_race_notification_tracking.sql` on **test** via phpMyAdmin → `npm run deploy:test`
    (schema check must pass) → run the cron spec, then the full e2e suite.
@@ -279,7 +306,8 @@ assumed to be the cause.
    Djarnis's go) → `npm run schema:check:live`.
 5. Watch the next race weekend: the GitHub Actions log and `cron_notifications.log` should show
    `Betting opened for: …` exactly once, with its lateness. Check Proton Sent for one player.
-6. If lateness is still hours, revisit Phase 2 option B.
+6. After Phase 1 is live, Djarnis sets up the cron-job.org jobs (2.1), test first. The
+   claim in 1.4 makes it safe to have them running alongside GitHub during the switch.
 
 ## Rollback
 
@@ -300,5 +328,6 @@ assumed to be the cause.
 | `public/admin.php` | reset markers when a race's date/time changes |
 | `public/tools/test-seed.php` | 2 seed + 2 cleanup actions |
 | `tests/e2e/07-cron.spec.js` | T1–T6 |
-| `.github/workflows/cron-notifications.yml` | (Phase 2 D, if approved) minute `1` → `23` |
-| `docs/cron-jobs.md`, `docs/gotchas.md` | Phase 3 |
+| `.github/workflows/cron-notifications.yml` | per 2.3: minute `1` → `23`, or remove `schedule:` |
+| `public/includes/admin-dashboards/nogler-rotation-lib.php`, `docs/admin-dashboards.md` | note the cron-job.org copy of `CRON_SECRET` (2.2) |
+| `docs/cron-jobs.md`, `docs/gotchas.md`, `docs/github-actions.md` | Phase 3 |

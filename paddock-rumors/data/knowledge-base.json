@@ -2100,5 +2100,20 @@
     "source_url": "https://en.wikipedia.org/wiki/2026_Singapore_Grand_Prix",
     "updated_at": "2026-10-11T20:02:40.631Z",
     "content_hash": "495f92ab14a6ce41"
+  },
+  {
+    "id": "quali-2026-r18-of-the-americas",
+    "title": "United States Grand Prix 2026 — Qualifying",
+    "content": "Season 2026, Round 18 Qualifying: United States Grand Prix. Andrea Kimi Antonelli claimed pole position for the United States Grand Prix at Circuit of the Americas, setting a Q3 lap time of 1:34.035 for Mercedes. Max Verstappen qualified second for Red Bull, 0.179 seconds adrift, while teammate Isack Hadjar took third at 1:34.250, just 0.036 seconds behind Verstappen. Charles Leclerc qualified fourth for Ferrari at 1:34.267, with Lewis Hamilton fifth at 1:34.311, placing the top five within 0.276 seconds of pole. George Russell took sixth for Mercedes, and notably both McLaren drivers — Oscar Piastri seventh and Lando Norris eighth — finished well off the lead group, with Norris over a second behind Antonelli, suggesting McLaren carried less single-lap pace than expected at this venue. Arvid Lindblad delivered a noteworthy result by reaching Q3 and qualifying ninth for RB F1 Team. Williams struggled significantly, with both Carlos Sainz and Alexander Albon eliminated in Q1. The Cadillac F1 Team cars of Sergio Pérez and Valtteri Bottas occupied the final two grid positions. The qualifying pace distribution, with Mercedes, Red Bull, and Ferrari closely matched across the top five, points toward a three-way contest at the front during the race, while McLaren may need to rely on race strategy to compensate for their qualifying deficit.",
+    "tags": {
+      "season": 2026,
+      "type": "qualifying",
+      "round": 18,
+      "circuit": "circuit-of-the-americas",
+      "pole_driver": "andrea-kimi-antonelli"
+    },
+    "source_url": null,
+    "updated_at": "2026-10-25T18:48:11.299Z",
+    "content_hash": "508968fd6653bff7"
   }
 ]
